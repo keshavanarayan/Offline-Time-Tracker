@@ -10,7 +10,7 @@
     "premake": "node -e \"const fs=require('fs'); fs.rmSync('resources', { recursive: true, force: true });\"",
     "make": "electron-forge make",
     "postmake": "node scripts/copy-exe.js",
-    "publish": "electron-forge publish"
+    "publish": "node scripts/publish-release.js"
   },
   "repository": {
     "type": "git",
