@@ -1,5 +1,5 @@
 {
-  "name": "kgatracker",
+  "name": "Offline-Time-Tracker",
   "version": "1.0.0",
   "description": "Offline Time Tracker",
   "main": "main.js",
@@ -14,16 +14,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/keshavanarayan/KGATracker.git"
+    "url": "git+https://github.com/keshavanarayan/Offline-Time-Tracker.git"
   },
   "keywords": [],
   "author": "Keshava Narayan",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/keshavanarayan/KGATracker/issues"
+    "url": "https://github.com/keshavanarayan/Offline-Time-Tracker/issues"
   },
-  "homepage": "https://github.com/keshavanarayan/KGATracker#readme",
+  "homepage": "https://github.com/keshavanarayan/Offline-Time-Tracker#readme",
   "devDependencies": {
     "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-deb": "^7.11.1",
