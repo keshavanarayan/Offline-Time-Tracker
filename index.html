@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KGA Projects</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --success: #10b981;
+      --success-hover: #059669;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --input-bg: #ffffff;
+      --input-disabled: #f3f4f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      max-width: 1000px;
+      width: 100%;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: calc(100vh - 40px);
+    }
+
+    .header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: background-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-header {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-header:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-header.active {
+      background-color: var(--success);
+    }
+
+    .input-field {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      outline: none;
+      background-color: var(--input-bg);
+      color: var(--text-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    .input-field:disabled {
+      background-color: var(--input-disabled);
+      cursor: not-allowed;
+    }
+
+    .input-error {
+      border-color: var(--danger) !important;
+    }
+
+    .main-content {
+      padding: 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow: hidden;
+    }
+
+    .timer-section {
+      background-color: #f9fafb;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .inputs-row {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .input-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .input-group input,
+    .input-group select {
+      padding: 12px 16px;
+      font-size: 1rem;
+    }
+
+    .timer-controls {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .timer-display {
+      font-size: 3rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 2px;
+    }
+
+    .btn-timer {
+      height: 56px;
+      width: 56px;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-start {
+      background-color: var(--success);
+    }
+
+    .btn-start:hover {
+      background-color: var(--success-hover);
+      transform: scale(1.05);
+    }
+
+    .btn-stop {
+      background-color: var(--danger);
+    }
+
+    .btn-stop:hover {
+      background-color: var(--danger-hover);
+      transform: scale(1.05);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .logs-section {
+      flex-grow: 1;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: var(--card-bg);
+    }
+
+    .logs-header {
+      padding: 16px 24px;
+      background-color: #f9fafb;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logs-header h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .btn-clear {
+      background: none;
+      color: var(--danger);
+      border: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-clear:hover {
+      color: var(--danger-hover);
+      text-decoration: underline;
+    }
+
+    .table-container {
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 12px 24px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: #f9fafb;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr {
+      border-bottom: 1px solid var(--border-color);
+      transition: background-color 0.1s;
+    }
+
+    tr:last-child {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background-color: #f9fafb;
+    }
+
+    .duration-cell {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .btn-delete {
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .btn-delete:hover {
+      color: var(--danger);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      color: #d1d5db;
+      margin-bottom: 8px;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>KGA Projects</h1>
+      <div class="header-actions">
+        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn btn-header"
+          title="Set folder for automatic weekly exports">
+          ⚙️ Setup Auto-Export
+        </button>
+        <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
+          title="Enter your name" />
+        <button id="exportBtn" onclick="exportCSV()" class="btn btn-header">
+          📄 Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Timer Section -->
+      <div class="timer-section">
+        <div class="inputs-row">
+          <div class="input-group">
+            <label for="projectInput">Project Name</label>
+            <input type="text" id="projectInput" class="input-field" list="projectSuggestions"
+              placeholder="e.g., Internal Tools" />
+            <datalist id="projectSuggestions"></datalist>
+          </div>
+          <div class="input-group">
+            <label for="taskInput">Task</label>
+            <select id="taskInput" class="input-field">
+              <option value="" disabled selected>Select a task...</option>
+              <option value="Proposal">Proposal</option>
+              <option value="Scheme">Scheme</option>
+              <option value="Views">Views</option>
+              <option value="GFC">GFC</option>
+              <option value="Estimation">Estimation</option>
+              <option value="Completion">Completion</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="timer-controls">
+          <div id="timerDisplay" class="timer-display">00:00:00</div>
+          <button id="startBtn" onclick="startTimer()" class="btn-timer btn-start" title="Start Timer">▶</button>
+          <button id="stopBtn" onclick="stopTimer()" class="btn-timer btn-stop hidden" title="Stop Timer">■</button>
+        </div>
+      </div>
+
+      <!-- Logs Section -->
+      <div class="logs-section">
+        <div class="logs-header">
+          <h2>Time Logs</h2>
+          <button onclick="clearLogs()" class="btn-clear">Clear All</button>
+        </div>
+
+        <div class="table-container">
+          <table id="logsTable">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Task</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <!-- Logs will be dynamically inserted here -->
+            </tbody>
+          </table>
+
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">📂</div>
+            <p style="font-size: 1.125rem; color: #4b5563;">No time logs yet.</p>
+            <p style="font-size: 0.875rem;">Start the timer above to track your first task.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- State Management ---
+    const STORAGE_KEY_LOGS = "offlineTimeTrackerLogs";
+    const STORAGE_KEY_ACTIVE = "offlineTimeTrackerActive";
+    const STORAGE_KEY_USERNAME = "offlineTimeTrackerUsername";
+    const STORAGE_KEY_EXPORT_FOLDER = "offlineTimeTrackerExportFolder";
+    const STORAGE_KEY_LAST_EXPORT = "offlineTimeTrackerLastExport";
+
+    let logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [];
+    let activeSession = JSON.parse(localStorage.getItem(STORAGE_KEY_ACTIVE)) || null;
+    let currentUsername = localStorage.getItem(STORAGE_KEY_USERNAME) || "";
+    let timerInterval = null;
+
+    // --- Electron Integration ---
+    let ipcRenderer = null;
+    if (window.electronAPI) {
+      try {
+        ipcRenderer = window.electronAPI;
+      } catch (e) {
+        console.warn("Error accessing electronAPI: ", e);
+      }
+    } else {
+      console.warn("Not running in Electron. Auto-export disabled.");
+    }
+
+    // --- DOM Elements ---
+    const usernameInput = document.getElementById("usernameInput");
+    const projectInput = document.getElementById("projectInput");
+    const taskInput = document.getElementById("taskInput");
+    const projectSuggestions = document.getElementById("projectSuggestions");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const logsTableBody = document.getElementById("logsTableBody");
+    const emptyState = document.getElementById("emptyState");
+    const autoExportBtn = document.getElementById("autoExportBtn");
+    const logsTable = document.getElementById("logsTable");
+
+    // --- Initialization ---
+    function init() {
+      usernameInput.value = currentUsername;
+      updateProjectList();
+      renderLogs();
+
+      // Check auto-export settings on load
+      if (localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER) && ipcRenderer) {
+        autoExportBtn.classList.add("active");
+        autoExportBtn.innerHTML = `✅ Auto-Export Active`;
+      }
+
+      if (ipcRenderer) {
+        // Check if we need to auto-export right now (and check every hour thereafter)
+        checkAutoExport();
+        setInterval(checkAutoExport, 60 * 60 * 1000);
+      } else {
+        autoExportBtn.style.display = "none"; // Hide if just running in a standard web browser
+      }
+
+      // Resume timer if page was closed while running
+      if (activeSession) {
+        projectInput.value = activeSession.project;
+        projectInput.disabled = true;
+
+        taskInput.value = activeSession.task || "";
+        taskInput.disabled = true;
+
+        startBtn.classList.add("hidden");
+        stopBtn.classList.remove("hidden");
+
+        timerInterval = setInterval(updateDisplay, 1000);
+        updateDisplay();
+      }
+    }
+
+    // --- User Logic ---
+    function saveUsername() {
+      currentUsername = usernameInput.value.trim();
+      localStorage.setItem(STORAGE_KEY_USERNAME, currentUsername);
+    }
+
+    function updateProjectList() {
+      const uniqueProjects = [
+        ...new Set(logs.map((log) => log.project).filter(Boolean)),
+      ];
+      projectSuggestions.innerHTML = "";
+      uniqueProjects.forEach((proj) => {
+        const option = document.createElement("option");
+        option.value = proj;
+        projectSuggestions.appendChild(option);
+      });
+    }
+
+    // --- Core Logic ---
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function updateDisplay() {
+      if (!activeSession) return;
+      const elapsed = Date.now() - activeSession.startTime;
+      timerDisplay.textContent = formatTime(elapsed);
+    }
+
+    function startTimer() {
+      const project = projectInput.value.trim();
+      const task = taskInput.value.trim();
+
+      let hasError = false;
+      if (!project) {
+        projectInput.classList.add("input-error");
+        hasError = true;
+      } else {
+        projectInput.classList.remove("input-error");
+      }
+
+      if (!task) {
+        taskInput.classList.add("input-error");
+        hasError = true;
+      } else {
+        taskInput.classList.remove("input-error");
+      }
+
+      if (hasError) return;
+
+      // Check if it's a new project
+      const existingProjects = [...new Set(logs.map((l) => l.project))];
+      if (!existingProjects.includes(project)) {
+        const confirmed = window.confirm(
+          `"${project}" is a new project. Do you want to add it?`,
+        );
+        if (!confirmed) return;
+      }
+
+      activeSession = {
+        project: project,
+        task: task,
+        startTime: Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEY_ACTIVE, JSON.stringify(activeSession));
+
+      projectInput.disabled = true;
+      taskInput.disabled = true;
+
+      startBtn.classList.add("hidden");
+      stopBtn.classList.remove("hidden");
+
+      timerInterval = setInterval(updateDisplay, 1000);
+      updateDisplay();
+    }
+
+    function stopTimer() {
+      if (!activeSession) return;
+
+      clearInterval(timerInterval);
+
+      const endTime = Date.now();
+      const duration = endTime - activeSession.startTime;
+
+      // Save log
+      const newLog = {
+        id: Date.now().toString(),
+        project: activeSession.project,
+        task: activeSession.task,
+        startTime: activeSession.startTime,
+        endTime: endTime,
+        duration: duration,
+      };
+
+      logs.unshift(newLog); // Add to beginning of array
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+
+      // Clear active session
+      activeSession = null;
+      localStorage.removeItem(STORAGE_KEY_ACTIVE);
+
+      // Reset UI
+      projectInput.disabled = false;
+      projectInput.value = "";
+
+      taskInput.disabled = false;
+      taskInput.value = "";
+
+      timerDisplay.textContent = "00:00:00";
+
+      stopBtn.classList.add("hidden");
+      startBtn.classList.remove("hidden");
+
+      updateProjectList();
+      renderLogs();
+    }
+
+    function deleteLog(id) {
+      logs = logs.filter((log) => log.id !== id);
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+      updateProjectList();
+      renderLogs();
+    }
+
+    function clearLogs() {
+      if (logs.length === 0) return;
+      const confirmClear = window.confirm(
+        "Are you sure you want to delete all time logs? This cannot be undone.",
+      );
+      if (confirmClear) {
+        logs = [];
+        localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+        updateProjectList();
+        renderLogs();
+      }
+    }
+
+    // --- UI Rendering ---
+    function parseTimeStringToDate(baseDate, timeStr) {
+      if (!timeStr) return new Date(baseDate);
+      const [hours, minutes] = timeStr.split(':');
+      const newDate = new Date(baseDate);
+      newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      return newDate;
+    }
+
+    function updateLogTime(id, field, newValue) {
+      const logIndex = logs.findIndex(l => l.id === id);
+      if (logIndex === -1) return;
+
+      const log = logs[logIndex];
+      const newTime = parseTimeStringToDate(log[field], newValue).getTime();
+
+      log[field] = newTime;
+
+      // Ensure end time is not before start time
+      if (log.endTime < log.startTime) {
+        if (field === 'startTime') {
+          log.endTime = log.startTime;
+        } else {
+          log.startTime = log.endTime;
+        }
+      }
+
+      log.duration = log.endTime - log.startTime;
+
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+      renderLogs();
+    }
+
+    function updateLogField(id, field, newValue) {
+      const logIndex = logs.findIndex(l => l.id === id);
+      if (logIndex === -1) return;
+
+      const log = logs[logIndex];
+      log[field] = newValue;
+
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+      updateProjectList();
+    }
+
+    function renderLogs() {
+      logsTableBody.innerHTML = "";
+
+      if (logs.length === 0) {
+        emptyState.classList.remove("hidden");
+        logsTable.classList.add("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      logsTable.classList.remove("hidden");
+
+      logs.forEach((log) => {
+        const startDate = new Date(log.startTime);
+        const endDate = new Date(log.endTime);
+
+        // Format for input type="time" (HH:MM)
+        const startTimeStr = startDate.toTimeString().substring(0, 5);
+        const endTimeStr = endDate.toTimeString().substring(0, 5);
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>
+            <input type="text" class="input-field" style="padding: 4px; width: 100%; min-width: 120px; font-size: 0.875rem;" value="${escapeHTML(log.project)}" onchange="updateLogField('${log.id}', 'project', this.value.trim())" list="projectSuggestions" title="Edit Project">
+          </td>
+          <td style="color: #6b7280;">${escapeHTML(log.task || "-")}</td>
+          <td style="color: #6b7280;">${startDate.toLocaleDateString()}</td>
+          <td>
+            <input type="time" class="input-field" style="padding: 4px; width: 110px;" value="${startTimeStr}" onchange="updateLogTime('${log.id}', 'startTime', this.value)" title="Edit Start Time">
+          </td>
+          <td>
+            <input type="time" class="input-field" style="padding: 4px; width: 110px;" value="${endTimeStr}" onchange="updateLogTime('${log.id}', 'endTime', this.value)" title="Edit End Time">
+          </td>
+          <td class="duration-cell">${formatTime(log.duration)}</td>
+          <td style="text-align: right;">
+              <button onclick="deleteLog('${log.id}')" class="btn-delete" title="Delete record">✖</button>
+          </td>
+        `;
+        logsTableBody.appendChild(tr);
+      });
+    }
+
+    function escapeHTML(str) {
+      return str.replace(
+        /[&<>'"]/g,
+        (tag) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;",
+          })[tag] || tag,
+      );
+    }
+
+    // --- Export Logic ---
+    function getCSVContent(logsToExport = logs) {
+      const headers = [
+        "Username",
+        "Project",
+        "Task",
+        "Date",
+        "Start Time",
+        "End Time",
+        "Duration (Seconds)",
+        "Duration (Formatted)",
+      ];
+      const csvRows = [headers.join(",")];
+
+      logsToExport.forEach((log) => {
+        const date = new Date(log.startTime).toLocaleDateString();
+        const start = new Date(log.startTime).toLocaleTimeString();
+        const end = new Date(log.endTime).toLocaleTimeString();
+        const durationSecs = Math.floor(log.duration / 1000);
+        const durationFmt = formatTime(log.duration);
+
+        const userEscaped = `"${currentUsername.replace(/"/g, '""')}"`;
+        const projectEscaped = `"${log.project.replace(/"/g, '""')}"`;
+        const taskEscaped = `"${(log.task || "").replace(/"/g, '""')}"`;
+
+        csvRows.push(
+          [
+            userEscaped,
+            projectEscaped,
+            taskEscaped,
+            `"${date}"`,
+            `"${start}"`,
+            `"${end}"`,
+            durationSecs,
+            `"${durationFmt}"`,
+          ].join(","),
+        );
+      });
+
+      return csvRows.join("\n");
+    }
+
+    async function setupAutoExport() {
+      if (!ipcRenderer) return;
+
+      // Ask main process to open a directory picker
+      const folderPath = await ipcRenderer.invoke("select-folder");
+
+      if (folderPath) {
+        localStorage.setItem(STORAGE_KEY_EXPORT_FOLDER, folderPath);
+        alert(
+          `Auto-export folder set to:\n${folderPath}\n\nYour timesheet will be saved here automatically every Monday for the previous week (Sunday to Saturday).`,
+        );
+
+        autoExportBtn.classList.add("active");
+        autoExportBtn.innerHTML = `✅ Auto-Export Active`;
+      }
+    }
+
+    async function checkAutoExport() {
+      const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+      if (!exportFolder || logs.length === 0) return;
+
+      const now = new Date();
+
+      // Calculate the start of the current week (Sunday)
+      const currentSunday = new Date(now);
+      currentSunday.setDate(now.getDate() - now.getDay());
+      currentSunday.setHours(0, 0, 0, 0);
+
+      // Calculate the start of the previous week (Previous Sunday)
+      const previousSunday = new Date(currentSunday);
+      previousSunday.setDate(currentSunday.getDate() - 7);
+
+      // Calculate the end of the previous week (Previous Saturday, 23:59:59)
+      const previousSaturday = new Date(currentSunday);
+      previousSaturday.setMilliseconds(-1);
+
+      // We use the timestamp of the previous Sunday to identify this specific week
+      const weekIdentifier = previousSunday.getTime().toString();
+
+      const lastExportWeek = localStorage.getItem(STORAGE_KEY_LAST_EXPORT);
+
+      // Only attempt export on Monday or later, and only if this specific week hasn't been exported yet
+      if (now.getDay() >= 1 && lastExportWeek !== weekIdentifier) {
+
+        // Filter logs that occurred between Previous Sunday (00:00:00) and Previous Saturday (23:59:59)
+        const weeklyLogs = logs.filter(log => {
+          return log.startTime >= previousSunday.getTime() && log.startTime <= previousSaturday.getTime();
+        });
+
+        // Don't export an empty file if they didn't work that week
+        if (weeklyLogs.length === 0) {
+          localStorage.setItem(STORAGE_KEY_LAST_EXPORT, weekIdentifier);
+
+          // Safely purge older logs
+          logs = logs.filter(log => log.startTime >= currentSunday.getTime());
+          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+          renderLogs();
+          updateProjectList();
+          return;
+        }
+
+        saveUsername();
+        const csvContent = getCSVContent(weeklyLogs);
+
+        const startDateStr = previousSunday.toISOString().split("T")[0];
+        const endDateStr = new Date(previousSaturday).toISOString().split("T")[0];
+
+        const namePrefix = currentUsername
+          ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
+          : "";
+        const fileName = `Weekly_Timesheet_${namePrefix}${startDateStr}_to_${endDateStr}.csv`;
+
+        const success = await window.electronAPI.invoke("save-csv-auto", {
+          folderPath: exportFolder,
+          fileName,
+          csvContent,
+        });
+
+        if (success !== false) {
+          // Mark this week as successfully exported
+          localStorage.setItem(STORAGE_KEY_LAST_EXPORT, weekIdentifier);
+
+          // Keep only logs from the current week (from currentSunday onwards)
+          logs = logs.filter(log => log.startTime >= currentSunday.getTime());
+          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+
+          renderLogs();
+          updateProjectList();
+        }
+      }
+    }
+
+    function exportCSV() {
+      const btn = document.getElementById("exportBtn");
+      if (logs.length === 0) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "No data to export";
+        btn.style.backgroundColor = "var(--text-muted)";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.backgroundColor = "";
+        }, 2000);
+        return;
+      }
+
+      saveUsername();
+
+      const csvContent = getCSVContent();
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+
+      const startDateStr = new Date(logs[logs.length - 1].startTime).toISOString().split("T")[0];
+      const endDateStr = new Date(logs[0].startTime).toISOString().split("T")[0];
+
+      const namePrefix = currentUsername
+        ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
+        : "";
+      link.setAttribute(
+        "download",
+        `Timesheet_${namePrefix}${startDateStr} to ${endDateStr}.csv`,
+      );
+      link.style.visibility = "hidden";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Start app
+    init();
+  </script>
+</body>
+
+</html>
