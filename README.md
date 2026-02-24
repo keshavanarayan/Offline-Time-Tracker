@@ -58,3 +58,12 @@ A GitHub Action will automatically build the application and create a draft rele
 
 ## License
 ISC
+
+
+## Changelog
+
+### v1.0.0 (2026-02-24)
+- Update publish script to auto-generate changelog in README (11163f7)
+- Add GitHub release publish script and workflow (252c70b)
+- initial commit (0b52a09)
+- Initial commit (bff7ad3)
