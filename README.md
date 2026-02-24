@@ -1,6 +1,6 @@
-# KGATracker
+# Offline-Time-Tracker
 
-**KGATracker** is an offline time tracker built as a standalone desktop application using Electron. 
+**Offline-Time-Tracker** is an offline time tracker built as a standalone desktop application using Electron. 
 
 ## Features
 - **Offline Time Tracking:** Keep track of your time without needing an internet connection.

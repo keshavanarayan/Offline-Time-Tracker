@@ -47,7 +47,7 @@ module.exports = {
       config: {
         repository: {
           owner: 'keshavanarayan',
-          name: 'KGATracker'
+          name: 'Offline-Time-Tracker'
         },
         prerelease: false,
         draft: true
