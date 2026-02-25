@@ -1,10 +1,40 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, autoUpdater } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
+}
+
+// Setup Auto Updater pointing to the LAN shared folder
+if (app.isPackaged) {
+  const updateFolder = '\\\\KGANEWSERVER\\Tools';
+
+  try {
+    // Initial feed URL fallback
+    autoUpdater.setFeedURL({ url: '\\\\KGANEWSERVER\\Tools' });
+
+    autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+      const dialogOpts = {
+        type: 'info',
+        buttons: ['Restart', 'Later'],
+        title: 'Application Update',
+        message: process.platform === 'win32' ? releaseNotes : releaseName,
+        detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+      };
+
+      dialog.showMessageBox(dialogOpts).then((returnValue) => {
+        if (returnValue.response === 0) autoUpdater.quitAndInstall();
+      });
+    });
+
+    autoUpdater.on('error', message => {
+      console.error('There was a problem updating the application:', message);
+    });
+  } catch (err) {
+    console.error('AutoUpdater setup failed:', err);
+  }
 }
 
 let mainWindow;
@@ -86,6 +116,17 @@ app.whenReady().then(() => {
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  // Check for updates shortly after startup
+  if (app.isPackaged) {
+    setTimeout(() => {
+      try {
+        autoUpdater.checkForUpdates();
+      } catch (err) {
+        console.error('Update check failed:', err);
+      }
+    }, 5000);
+  }
 });
 
 app.on('session-end', () => {
@@ -156,6 +197,44 @@ ipcMain.on('allow-minimize', () => {
 ipcMain.on('quit-app', () => {
   isQuitting = true;
   app.quit();
+});
+
+// IPC handler to check if update server is accessible
+ipcMain.handle('check-update-server', async (event, customFolder) => {
+  const updateFolder = customFolder || '\\\\KGANEWSERVER\\Tools';
+  try {
+    // Check if the directory is reachable and readable
+    await fs.promises.access(updateFolder, fs.constants.R_OK);
+    return true;
+  } catch (err) {
+    return false;
+  }
+});
+
+// IPC handler to open a folder selection dialog for updates
+ipcMain.handle('select-update-folder', async (event) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: 'Select Folder for Auto-Updates'
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0]; // Return the selected folder path
+  }
+  return null;
+});
+
+// Update the autoUpdater URL dynamically if changed by user
+ipcMain.on('set-update-url', (event, customFolder) => {
+  if (app.isPackaged) {
+    try {
+      const updateFolder = customFolder || '\\\\KGANEWSERVER\\Tools';
+      autoUpdater.setFeedURL({ url: updateFolder });
+      console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
+    } catch (err) {
+      console.error('Failed to set AutoUpdater URL:', err);
+    }
+  }
 });
 
 // IPC handler to open a folder selection dialog

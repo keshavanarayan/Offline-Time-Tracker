@@ -88,6 +88,19 @@
       gap: 6px;
     }
 
+    .status-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: default;
+      color: white;
+    }
+
     .input-field {
       padding: 8px 12px;
       border: 1px solid var(--border-color);
@@ -533,6 +546,10 @@
     <div class="header">
       <h1>KGA Projects</h1>
       <div class="header-actions">
+        <div id="autoUpdateStatusBtn" class="status-btn hidden" title="Checking update server status..."
+          style="background-color: var(--text-muted);">
+          🔄 Checking Updates...
+        </div>
         <button id="autoExportBtn" onclick="setupAutoExport()" class="btn"
           style="background-color: rgba(255, 255, 255, 0.2); color: white;"
           onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
@@ -641,6 +658,7 @@
     const STORAGE_KEY_USERNAME = "offlineTimeTrackerUsername";
     const STORAGE_KEY_EXPORT_FOLDER = "offlineTimeTrackerExportFolder";
     const STORAGE_KEY_LAST_EXPORT = "offlineTimeTrackerLastExport";
+    const STORAGE_KEY_UPDATE_FOLDER = "offlineTimeTrackerUpdateFolder";
 
     let logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [];
     let activeSession = JSON.parse(localStorage.getItem(STORAGE_KEY_ACTIVE)) || null;
@@ -688,6 +706,8 @@
       }
 
       if (ipcRenderer) {
+        checkUpdateServerStatus();
+
         // Check if we need to auto-export right now (and check every hour thereafter)
         checkAutoExport();
         setInterval(checkAutoExport, 60 * 60 * 1000);
@@ -811,6 +831,71 @@
             ipcRenderer.send('allow-minimize');
           }
         });
+      }
+    }
+
+    function getFormattedDateForExport() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+      const dd = String(now.getDate()).padStart(2, '0');
+      return yyyy + mm + dd;
+    }
+
+    async function setupAutoUpdate() {
+      if (!ipcRenderer) return;
+
+      const proceed = confirm("Would you like to change the update folder location? If you cancel, it will default to \\\\KGANEWSERVER\\Tools.");
+      if (!proceed) {
+        localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
+        checkUpdateServerStatus(); // Test the fallback default
+        return;
+      }
+
+      const selectedPath = await ipcRenderer.invoke('select-update-folder');
+      if (selectedPath) {
+        const confirmChange = confirm(`Are you sure you want to change the update location to:\n${selectedPath}`);
+        if (confirmChange) {
+          localStorage.setItem(STORAGE_KEY_UPDATE_FOLDER, selectedPath);
+          checkUpdateServerStatus();
+        } else {
+          // User picked a path but didn't confirm setting it
+          localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
+          checkUpdateServerStatus();
+        }
+      } else {
+        // User aborted the folder picker dialog
+        localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
+        checkUpdateServerStatus();
+      }
+    }
+
+    async function checkUpdateServerStatus() {
+      if (!ipcRenderer) return;
+      const statusBtn = document.getElementById("autoUpdateStatusBtn");
+      statusBtn.classList.remove("hidden");
+
+      const customFolder = localStorage.getItem(STORAGE_KEY_UPDATE_FOLDER) || null;
+
+      try {
+        const isOnline = await ipcRenderer.invoke('check-update-server', customFolder);
+        if (isOnline) {
+          statusBtn.style.backgroundColor = "var(--success)";
+          statusBtn.innerHTML = "✅ Update Server Online";
+          statusBtn.title = `The LAN update server is accessible at ${customFolder || "\\\\KGANEWSERVER\\Tools"}.\nClick to configure.`;
+        } else {
+          statusBtn.style.backgroundColor = "var(--danger)";
+          statusBtn.innerHTML = "❌ Update Server Offline";
+          statusBtn.title = `Cannot reach ${customFolder || "\\\\KGANEWSERVER\\Tools"}. Updates may not work.\nClick to configure.`;
+        }
+
+        if (isOnline) {
+          ipcRenderer.send('set-update-url', customFolder);
+        }
+      } catch (e) {
+        statusBtn.style.backgroundColor = "var(--danger)";
+        statusBtn.innerHTML = "❌ Update Check Failed";
+        statusBtn.title = "Error checking the update server.\nClick to configure.";
       }
     }
 

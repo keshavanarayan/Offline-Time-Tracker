@@ -3,13 +3,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     invoke: (channel, ...args) => {
         // Whitelist channels to prevent arbitrary IPC calls
-        const validChannels = ['select-folder'];
+        const validChannels = ['select-folder', 'check-update-server', 'select-update-folder'];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
         }
     },
     send: (channel, data) => {
-        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app', 'allow-mini-mode', 'allow-minimize', 'close-window'];
+        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app', 'allow-mini-mode', 'allow-minimize', 'close-window', 'set-update-url'];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
         }
