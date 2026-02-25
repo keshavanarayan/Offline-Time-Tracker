@@ -39,7 +39,7 @@
     }
 
     .app-container {
-      max-width: 1300px;
+      /*max-width: 1300px;*/
       width: 100%;
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -47,7 +47,56 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: calc(100vh - 40px);
+      height: 95vh;
+      /* Fill entire window since there is no native frame */
+    }
+
+    /* Custom Title Bar */
+    .title-bar {
+      height: 32px;
+      background-color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-left: 12px;
+      -webkit-app-region: drag;
+      /* Makes it draggable */
+      user-select: none;
+      color: white;
+      font-size: 0.8rem;
+    }
+
+    .title-bar-title {
+      font-weight: 500;
+    }
+
+    .title-bar-controls {
+      display: flex;
+      height: 100%;
+      -webkit-app-region: no-drag;
+      /* Buttons shouldn't drag */
+    }
+
+    .control-btn {
+      width: 46px;
+      height: 100%;
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+
+    .control-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .control-btn.close:hover {
+      background-color: var(--danger);
     }
 
     .header {
@@ -241,6 +290,7 @@
       background-color: var(--card-bg);
     }
 
+    body.mini-mode .title-bar,
     body.mini-mode .header,
     body.mini-mode .logs-section,
     body.mini-mode .inputs-row {
@@ -251,6 +301,8 @@
       padding: 0;
       justify-content: center;
       align-items: center;
+      -webkit-app-region: drag;
+      /* Allow dragging the whole mini window */
     }
 
     body.mini-mode .timer-section {
@@ -278,10 +330,17 @@
     .btn-restore {
       display: none;
       background-color: var(--primary);
+      -webkit-app-region: no-drag;
+      /* Ensure button remains clickable */
     }
 
     body.mini-mode .btn-restore {
       display: flex;
+    }
+
+    .btn-timer {
+      -webkit-app-region: no-drag;
+      /* Ensure timer controls are clickable */
     }
 
     .btn-restore:hover {
@@ -452,11 +511,85 @@
       padding: 10px 24px;
       font-size: 1.25rem;
     }
+
+    /* Custom Title Bar */
+    .title-bar {
+      -webkit-app-region: drag;
+      /* Make the entire title bar draggable */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px;
+      height: 30px;
+      /* Standard height for Windows title bars */
+      background-color: var(--header-bg);
+      /* Or a specific title bar color */
+      color: var(--text-main);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .title-bar-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      -webkit-app-region: no-drag;
+      /* Allow text selection */
+    }
+
+    .title-bar-controls {
+      display: flex;
+      -webkit-app-region: no-drag;
+      /* Make buttons clickable */
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.1s, color 0.1s;
+    }
+
+    .control-btn:hover {
+      background-color: var(--primary-hover);
+      /* Or a specific hover color */
+      color: var(--text-main);
+    }
+
+    .control-btn.close:hover {
+      background-color: #e81123;
+      /* Red for close button */
+      color: white;
+    }
+
+    body.mini-mode .title-bar {
+      display: none;
+      /* Hide title bar in mini-mode */
+    }
   </style>
 </head>
 
 <body>
   <div class="app-container">
+    <!-- Custom Title Bar -->
+    <div class="title-bar" id="titleBar">
+      <div class="title-bar-title"> </div>
+      <div class="title-bar-controls">
+        <button class="control-btn close" onclick="closeApp()" title="Close">&#xE8BB;</button>
+      </div>
+    </div>
+    <style>
+      /* Temporary inline font for Windows-style icons */
+      .control-btn {
+        font-family: "Segoe MDL2 Assets", sans-serif;
+      }
+    </style>
+
     <!-- Header -->
     <div class="header">
       <h1>KGA Projects</h1>
@@ -769,6 +902,19 @@
         document.getElementById('customModal').classList.add('hidden');
         callback(true);
       };
+    }
+
+    // --- Window Controls ---
+    function minimizeApp() {
+      if (ipcRenderer) {
+        ipcRenderer.send('minimize-window');
+      }
+    }
+
+    function closeApp() {
+      if (ipcRenderer) {
+        ipcRenderer.send('close-window');
+      }
     }
 
     // --- User Logic ---

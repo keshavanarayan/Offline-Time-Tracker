@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         }
     },
     send: (channel, data) => {
-        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app', 'allow-mini-mode', 'allow-minimize'];
+        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app', 'allow-mini-mode', 'allow-minimize', 'close-window', 'minimize-window'];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
         }

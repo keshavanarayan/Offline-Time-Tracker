@@ -19,6 +19,7 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    frame: false, // Make window frameless
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // It's important to keep contextIsolation true and nodeIntegration false
@@ -27,6 +28,12 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Launch app in true fullscreen state to hide taskbar
+  mainWindow.setFullScreen(true);
+
+  // Ensure no other fullscreen app can overlay on top of it
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
 
   mainWindow.on('close', (e) => {
     if (isShuttingDown) {
@@ -102,11 +109,27 @@ ipcMain.on('restore-window', () => {
   if (mainWindow && isMiniMode) {
     isMiniMode = false;
     mainWindow.setMinimumSize(800, 600); // Restore normal minimums
-    mainWindow.setSize(1000, 800);
-    mainWindow.center();
+    mainWindow.setFullScreen(true); // Restore to fullscreen
     mainWindow.setMenuBarVisibility(true);
-    mainWindow.setAlwaysOnTop(false);
+
+    // Ensure no other fullscreen app can overlay on top of it
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.webContents.send('toggle-mini-mode', false);
+  }
+});
+
+// IPC handler to explicitly initiate a close (from custom title bar)
+ipcMain.on('close-window', () => {
+  if (mainWindow) {
+    // This triggers the same 'close' event handler below, executing the check
+    mainWindow.close();
+  }
+});
+
+// IPC handler to explicitly initiate a minimize (from custom title bar)
+ipcMain.on('minimize-window', () => {
+  if (mainWindow && !isMinimizing) {
+    mainWindow.webContents.send('check-can-minimize');
   }
 });
 
@@ -114,8 +137,14 @@ ipcMain.on('restore-window', () => {
 ipcMain.on('allow-mini-mode', () => {
   if (mainWindow && !isMiniMode) {
     isMiniMode = true;
-    mainWindow.setMinimumSize(300, 160); // Allow shrinking
-    mainWindow.setSize(300, 160);
+    if (mainWindow.isFullScreen()) {
+      mainWindow.setFullScreen(false);
+    }
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    }
+    mainWindow.setMinimumSize(350, 80); // Allow shrinking
+    mainWindow.setSize(350, 80);
     mainWindow.setMenuBarVisibility(false);
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.webContents.send('toggle-mini-mode', true);
