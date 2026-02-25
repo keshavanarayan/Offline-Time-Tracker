@@ -51,54 +51,6 @@
       /* Fill entire window since there is no native frame */
     }
 
-    /* Custom Title Bar */
-    .title-bar {
-      height: 32px;
-      background-color: var(--primary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-left: 12px;
-      -webkit-app-region: drag;
-      /* Makes it draggable */
-      user-select: none;
-      color: white;
-      font-size: 0.8rem;
-    }
-
-    .title-bar-title {
-      font-weight: 500;
-    }
-
-    .title-bar-controls {
-      display: flex;
-      height: 100%;
-      -webkit-app-region: no-drag;
-      /* Buttons shouldn't drag */
-    }
-
-    .control-btn {
-      width: 46px;
-      height: 100%;
-      border: none;
-      background: transparent;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: background-color 0.2s;
-    }
-
-    .control-btn:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .control-btn.close:hover {
-      background-color: var(--danger);
-    }
-
     .header {
       background-color: var(--primary);
       color: white;
@@ -134,19 +86,6 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-    }
-
-    .btn-header {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-
-    .btn-header:hover {
-      background-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-header.active {
-      background-color: var(--success);
     }
 
     .input-field {
@@ -594,13 +533,16 @@
     <div class="header">
       <h1>KGA Projects</h1>
       <div class="header-actions">
-        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn btn-header"
+        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn"
+          style="background-color: rgba(255, 255, 255, 0.2); color: white;"
+          onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+          onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'"
           title="Set folder for automatic weekly exports">
           ⚙️ Setup Auto-Export
         </button>
         <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
           title="Enter your name" />
-        <button id="exportBtn" onclick="exportCSV()" class="btn btn-header">
+        <button id="exportBtn" onclick="exportCSV()" class="btn">
           📄 Export CSV
         </button>
       </div>
@@ -905,12 +847,6 @@
     }
 
     // --- Window Controls ---
-    function minimizeApp() {
-      if (ipcRenderer) {
-        ipcRenderer.send('minimize-window');
-      }
-    }
-
     function closeApp() {
       if (ipcRenderer) {
         ipcRenderer.send('close-window');

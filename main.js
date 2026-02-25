@@ -126,13 +126,6 @@ ipcMain.on('close-window', () => {
   }
 });
 
-// IPC handler to explicitly initiate a minimize (from custom title bar)
-ipcMain.on('minimize-window', () => {
-  if (mainWindow && !isMinimizing) {
-    mainWindow.webContents.send('check-can-minimize');
-  }
-});
-
 // IPC handler to transition to mini window after renderer validation
 ipcMain.on('allow-mini-mode', () => {
   if (mainWindow && !isMiniMode) {
