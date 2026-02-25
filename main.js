@@ -7,8 +7,13 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow;
+let isShuttingDown = false;
+let isQuitting = false;
+let isMiniMode = false;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
     webPreferences: {
@@ -19,6 +24,30 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  mainWindow.on('close', (e) => {
+    if (isShuttingDown) {
+      // System is shutting down, giving renderer a chance to save
+      if (!isQuitting) {
+        e.preventDefault();
+        mainWindow.webContents.send('app-closing');
+      }
+      return;
+    }
+
+    // Normal close button clicked - intercept and enter mini mode
+    if (!isQuitting && !isMiniMode) {
+      e.preventDefault();
+      isMiniMode = true;
+      mainWindow.setSize(300, 160);
+      mainWindow.setMenuBarVisibility(false);
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+      mainWindow.webContents.send('toggle-mini-mode', true);
+    } else if (!isQuitting) {
+      // Already in mini mode, do not allow closing
+      e.preventDefault();
+    }
+  });
 
   // Open the DevTools for debugging (optional)
   // mainWindow.webContents.openDevTools();
@@ -38,8 +67,38 @@ app.whenReady().then(() => {
   });
 });
 
+app.on('session-end', () => {
+  // Windows specific: indicates system is shutting down or user is logging off
+  isShuttingDown = true;
+  if (mainWindow) {
+    mainWindow.webContents.send('app-closing');
+  }
+});
+
+app.on('before-quit', () => {
+  isShuttingDown = true;
+});
+
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// IPC handler for shrinking/restoring window
+ipcMain.on('restore-window', () => {
+  if (mainWindow && isMiniMode) {
+    isMiniMode = false;
+    mainWindow.setSize(1000, 800);
+    mainWindow.center();
+    mainWindow.setMenuBarVisibility(true);
+    mainWindow.setAlwaysOnTop(false);
+    mainWindow.webContents.send('toggle-mini-mode', false);
+  }
+});
+
+// IPC handler for finally quitting the app safely
+ipcMain.on('quit-app', () => {
+  isQuitting = true;
+  app.quit();
 });
 
 // IPC handler to open a folder selection dialog

@@ -224,6 +224,68 @@
       display: none !important;
     }
 
+    /* Mini Mode Styles */
+    body.mini-mode {
+      padding: 0;
+      overflow: hidden;
+      background-color: transparent;
+    }
+
+    body.mini-mode .app-container {
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+      background-color: var(--card-bg);
+    }
+
+    body.mini-mode .header,
+    body.mini-mode .logs-section,
+    body.mini-mode .inputs-row {
+      display: none !important;
+    }
+
+    body.mini-mode .main-content {
+      padding: 0;
+      justify-content: center;
+      align-items: center;
+    }
+
+    body.mini-mode .timer-section {
+      background-color: transparent;
+      border: none;
+      padding: 10px;
+      justify-content: center;
+      margin: 0;
+      height: 100%;
+    }
+
+    body.mini-mode .timer-controls {
+      gap: 16px;
+    }
+
+    body.mini-mode .timer-display {
+      font-size: 2.25rem;
+    }
+
+    body.mini-mode .btn-timer {
+      height: 48px;
+      width: 48px;
+    }
+
+    .btn-restore {
+      display: none;
+      background-color: var(--primary);
+    }
+
+    body.mini-mode .btn-restore {
+      display: flex;
+    }
+
+    .btn-restore:hover {
+      background-color: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
     .logs-section {
       flex-grow: 1;
       border: 1px solid var(--border-color);
@@ -412,6 +474,8 @@
           <div id="timerDisplay" class="timer-display">00:00:00</div>
           <button id="startBtn" onclick="startTimer()" class="btn-timer btn-start" title="Start Timer">▶</button>
           <button id="stopBtn" onclick="stopTimer()" class="btn-timer btn-stop hidden" title="Stop Timer">■</button>
+          <button id="restoreBtn" onclick="restoreWindow()" class="btn-timer btn-restore"
+            title="Restore Window">⤢</button>
         </div>
       </div>
 
@@ -428,6 +492,7 @@
               <tr>
                 <th>Project</th>
                 <th>Task</th>
+                <th>Username</th>
                 <th>Date</th>
                 <th>Start</th>
                 <th>End</th>
@@ -521,6 +586,42 @@
 
         timerInterval = setInterval(updateDisplay, 1000);
         updateDisplay();
+      } else {
+        // Auto-start new timer if none active
+        startTimer();
+      }
+
+      // Set up IPC listeners
+      if (ipcRenderer) {
+        ipcRenderer.on('toggle-mini-mode', (isMini) => {
+          if (isMini) {
+            document.body.classList.add('mini-mode');
+          } else {
+            document.body.classList.remove('mini-mode');
+          }
+        });
+
+        ipcRenderer.on('app-closing', () => {
+          if (activeSession) {
+            const project = projectInput.value.trim();
+            const task = taskInput.value.trim();
+
+            if (!project || !task) {
+              alert("Wait! Please fill in the Project and Task before shutting down.");
+              // If we are in mini mode, we should restore so the user can see the inputs
+              if (document.body.classList.contains('mini-mode')) {
+                restoreWindow();
+              }
+              return; // Do not close yet
+            }
+
+            // Everything is filled, so stop the timer (which saves the log)
+            stopTimer();
+          }
+
+          // Tell main process it is safe to quit now
+          ipcRenderer.send('quit-app');
+        });
       }
     }
 
@@ -561,30 +662,27 @@
       const project = projectInput.value.trim();
       const task = taskInput.value.trim();
 
-      let hasError = false;
       if (!project) {
         projectInput.classList.add("input-error");
-        hasError = true;
       } else {
         projectInput.classList.remove("input-error");
       }
 
       if (!task) {
         taskInput.classList.add("input-error");
-        hasError = true;
       } else {
         taskInput.classList.remove("input-error");
       }
 
-      if (hasError) return;
-
-      // Check if it's a new project
-      const existingProjects = [...new Set(logs.map((l) => l.project))];
-      if (!existingProjects.includes(project)) {
-        const confirmed = window.confirm(
-          `"${project}" is a new project. Do you want to add it?`,
-        );
-        if (!confirmed) return;
+      // Check if it's a new project (only if it's not empty)
+      if (project) {
+        const existingProjects = [...new Set(logs.map((l) => l.project))];
+        if (!existingProjects.includes(project)) {
+          const confirmed = window.confirm(
+            `"${project}" is a new project. Do you want to add it?`,
+          );
+          if (!confirmed) return;
+        }
       }
 
       activeSession = {
@@ -594,8 +692,9 @@
       };
       localStorage.setItem(STORAGE_KEY_ACTIVE, JSON.stringify(activeSession));
 
-      projectInput.disabled = true;
-      taskInput.disabled = true;
+      // Do NOT disable the inputs here, because the user needs to be able to fill them while timer runs
+      // projectInput.disabled = true;
+      // taskInput.disabled = true;
 
       startBtn.classList.add("hidden");
       stopBtn.classList.remove("hidden");
@@ -604,8 +703,18 @@
       updateDisplay();
     }
 
+    function restoreWindow() {
+      if (ipcRenderer) {
+        ipcRenderer.send('restore-window');
+      }
+    }
+
     function stopTimer() {
       if (!activeSession) return;
+
+      // When stopping the timer, if the fields are empty now, grab whatever the user typed
+      const finalProject = projectInput.value.trim();
+      const finalTask = taskInput.value.trim();
 
       clearInterval(timerInterval);
 
@@ -615,8 +724,9 @@
       // Save log
       const newLog = {
         id: Date.now().toString(),
-        project: activeSession.project,
-        task: activeSession.task,
+        project: finalProject,
+        task: finalTask,
+        username: currentUsername,
         startTime: activeSession.startTime,
         endTime: endTime,
         duration: duration,
@@ -735,7 +845,20 @@
           <td>
             <input type="text" class="input-field" style="padding: 4px; width: 100%; min-width: 120px; font-size: 0.875rem;" value="${escapeHTML(log.project)}" onchange="updateLogField('${log.id}', 'project', this.value.trim())" list="projectSuggestions" title="Edit Project">
           </td>
-          <td style="color: #6b7280;">${escapeHTML(log.task || "-")}</td>
+          <td>
+            <select class="input-field" style="padding: 4px; width: 100%; min-width: 100px; font-size: 0.875rem;" onchange="updateLogField('${log.id}', 'task', this.value)" title="Edit Task">
+              <option value="" disabled ${!log.task ? 'selected' : ''}>Select...</option>
+              <option value="Proposal" ${log.task === 'Proposal' ? 'selected' : ''}>Proposal</option>
+              <option value="Scheme" ${log.task === 'Scheme' ? 'selected' : ''}>Scheme</option>
+              <option value="Views" ${log.task === 'Views' ? 'selected' : ''}>Views</option>
+              <option value="GFC" ${log.task === 'GFC' ? 'selected' : ''}>GFC</option>
+              <option value="Estimation" ${log.task === 'Estimation' ? 'selected' : ''}>Estimation</option>
+              <option value="Completion" ${log.task === 'Completion' ? 'selected' : ''}>Completion</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="input-field" style="padding: 4px; width: 100%; min-width: 100px; font-size: 0.875rem;" value="${escapeHTML(log.username || "")}" onchange="updateLogField('${log.id}', 'username', this.value.trim())" title="Edit Username">
+          </td>
           <td style="color: #6b7280;">${startDate.toLocaleDateString()}</td>
           <td>
             <input type="time" class="input-field" style="padding: 4px; width: 110px;" value="${startTimeStr}" onchange="updateLogTime('${log.id}', 'startTime', this.value)" title="Edit Start Time">
@@ -787,7 +910,9 @@
         const durationSecs = Math.floor(log.duration / 1000);
         const durationFmt = formatTime(log.duration);
 
-        const userEscaped = `"${currentUsername.replace(/"/g, '""')}"`;
+        // Make sure we use the username attached to the log if it exists, otherwise fall back to global
+        const entryUsername = log.username !== undefined ? log.username : currentUsername;
+        const userEscaped = `"${entryUsername.replace(/"/g, '""')}"`;
         const projectEscaped = `"${log.project.replace(/"/g, '""')}"`;
         const taskEscaped = `"${(log.task || "").replace(/"/g, '""')}"`;
 
