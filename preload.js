@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         }
     },
     send: (channel, data) => {
-        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app'];
+        const validChannels = ['save-csv-auto', 'restore-window', 'quit-app', 'allow-mini-mode', 'allow-minimize'];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
         }
@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     on: (channel, func) => {
         // For listening to messages from main
         // Not currently used but good practice to include
-        const validChannels = ['toggle-mini-mode', 'app-closing'];
+        const validChannels = ['toggle-mini-mode', 'app-closing', 'check-can-mini-mode', 'check-can-minimize'];
         if (validChannels.includes(channel)) {
             // Deliberately strip event as it includes `sender`
             ipcRenderer.on(channel, (event, ...args) => func(...args));

@@ -11,11 +11,14 @@ let mainWindow;
 let isShuttingDown = false;
 let isQuitting = false;
 let isMiniMode = false;
+let isMinimizing = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // It's important to keep contextIsolation true and nodeIntegration false
@@ -35,18 +38,29 @@ function createWindow() {
       return;
     }
 
-    // Normal close button clicked - intercept and enter mini mode
+    // Normal close button clicked - intercept and check if mini mode is allowed
     if (!isQuitting && !isMiniMode) {
       e.preventDefault();
-      isMiniMode = true;
-      mainWindow.setSize(300, 160);
-      mainWindow.setMenuBarVisibility(false);
-      mainWindow.setAlwaysOnTop(true, 'screen-saver');
-      mainWindow.webContents.send('toggle-mini-mode', true);
+      // Ask the renderer to verify there are no missing logs
+      mainWindow.webContents.send('check-can-mini-mode');
     } else if (!isQuitting) {
       // Already in mini mode, do not allow closing
       e.preventDefault();
     }
+  });
+
+  mainWindow.on('minimize', (e) => {
+    if (!isMinimizing) {
+      e.preventDefault();
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.webContents.send('check-can-minimize');
+    }
+  });
+
+  mainWindow.on('restore', () => {
+    isMinimizing = false;
   });
 
   // Open the DevTools for debugging (optional)
@@ -87,11 +101,32 @@ app.on('window-all-closed', function () {
 ipcMain.on('restore-window', () => {
   if (mainWindow && isMiniMode) {
     isMiniMode = false;
+    mainWindow.setMinimumSize(800, 600); // Restore normal minimums
     mainWindow.setSize(1000, 800);
     mainWindow.center();
     mainWindow.setMenuBarVisibility(true);
     mainWindow.setAlwaysOnTop(false);
     mainWindow.webContents.send('toggle-mini-mode', false);
+  }
+});
+
+// IPC handler to transition to mini window after renderer validation
+ipcMain.on('allow-mini-mode', () => {
+  if (mainWindow && !isMiniMode) {
+    isMiniMode = true;
+    mainWindow.setMinimumSize(300, 160); // Allow shrinking
+    mainWindow.setSize(300, 160);
+    mainWindow.setMenuBarVisibility(false);
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    mainWindow.webContents.send('toggle-mini-mode', true);
+  }
+});
+
+// IPC handler to transition to minimize after renderer validation
+ipcMain.on('allow-minimize', () => {
+  if (mainWindow && !isMinimizing) {
+    isMinimizing = true;
+    mainWindow.minimize();
   }
 });
 

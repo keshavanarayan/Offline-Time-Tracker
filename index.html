@@ -39,7 +39,7 @@
     }
 
     .app-container {
-      max-width: 1000px;
+      max-width: 1300px;
       width: 100%;
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -148,6 +148,7 @@
 
     .inputs-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 16px;
       flex: 1;
       min-width: 300px;
@@ -158,6 +159,7 @@
       flex-direction: column;
       gap: 8px;
       flex: 1;
+      min-width: 150px;
     }
 
     .input-group label {
@@ -170,6 +172,7 @@
     .input-group select {
       padding: 12px 16px;
       font-size: 1rem;
+      width: 100%;
     }
 
     .timer-controls {
@@ -312,19 +315,6 @@
       margin: 0;
     }
 
-    .btn-clear {
-      background: none;
-      color: var(--danger);
-      border: none;
-      font-size: 0.875rem;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    .btn-clear:hover {
-      color: var(--danger-hover);
-      text-decoration: underline;
-    }
 
     .table-container {
       overflow-y: auto;
@@ -424,6 +414,44 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+
+    /* Custom Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      font-size: 1.5rem;
+      /* Bigger text */
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+    }
+
+    .modal-actions {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn-modal {
+      padding: 10px 24px;
+      font-size: 1.25rem;
+    }
   </style>
 </head>
 
@@ -451,16 +479,23 @@
       <div class="timer-section">
         <div class="inputs-row">
           <div class="input-group">
+            <label for="clientInput">Client Name</label>
+            <input type="text" id="clientInput" class="input-field" list="clientSuggestions"
+              placeholder="e.g., Meera (or) SBI" />
+            <datalist id="clientSuggestions"></datalist>
+          </div>
+          <div class="input-group">
             <label for="projectInput">Project Name</label>
             <input type="text" id="projectInput" class="input-field" list="projectSuggestions"
-              placeholder="e.g., Internal Tools" />
+              placeholder="e.g., Residence (or) Saibaba Colony" />
             <datalist id="projectSuggestions"></datalist>
           </div>
           <div class="input-group">
             <label for="taskInput">Task</label>
             <select id="taskInput" class="input-field">
-              <option value="" disabled selected>Select a task...</option>
-              <option value="Proposal">Proposal</option>
+              <!-- <option value="" disabled selected>Select a task...</option> -->
+
+              <option value="Proposal" selected>Proposal</option>
               <option value="Scheme">Scheme</option>
               <option value="Views">Views</option>
               <option value="GFC">GFC</option>
@@ -483,13 +518,13 @@
       <div class="logs-section">
         <div class="logs-header">
           <h2>Time Logs</h2>
-          <button onclick="clearLogs()" class="btn-clear">Clear All</button>
         </div>
 
         <div class="table-container">
           <table id="logsTable">
             <thead>
               <tr>
+                <th>Client</th>
                 <th>Project</th>
                 <th>Task</th>
                 <th>Username</th>
@@ -511,6 +546,15 @@
             <p style="font-size: 0.875rem;">Start the timer above to track your first task.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Modal -->
+  <div id="customModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions">
       </div>
     </div>
   </div>
@@ -542,8 +586,10 @@
 
     // --- DOM Elements ---
     const usernameInput = document.getElementById("usernameInput");
+    const clientInput = document.getElementById("clientInput");
     const projectInput = document.getElementById("projectInput");
     const taskInput = document.getElementById("taskInput");
+    const clientSuggestions = document.getElementById("clientSuggestions");
     const projectSuggestions = document.getElementById("projectSuggestions");
     const timerDisplay = document.getElementById("timerDisplay");
     const startBtn = document.getElementById("startBtn");
@@ -557,6 +603,7 @@
     function init() {
       usernameInput.value = currentUsername;
       updateProjectList();
+      updateClientList();
       renderLogs();
 
       // Check auto-export settings on load
@@ -575,11 +622,9 @@
 
       // Resume timer if page was closed while running
       if (activeSession) {
-        projectInput.value = activeSession.project;
-        projectInput.disabled = true;
-
+        clientInput.value = activeSession.client || "";
+        projectInput.value = activeSession.project || "";
         taskInput.value = activeSession.task || "";
-        taskInput.disabled = true;
 
         startBtn.classList.add("hidden");
         stopBtn.classList.remove("hidden");
@@ -588,7 +633,7 @@
         updateDisplay();
       } else {
         // Auto-start new timer if none active
-        startTimer();
+        // startTimer(); // Removed auto-start to prevent immediate validation on load
       }
 
       // Set up IPC listeners
@@ -602,12 +647,31 @@
         });
 
         ipcRenderer.on('app-closing', () => {
+          let hasMissingInfo = false;
+
+          // Check if any previous log has missing info
+          for (const log of logs) {
+            if (!log.client || !log.project || !log.task) {
+              hasMissingInfo = true;
+              break;
+            }
+          }
+
+          if (hasMissingInfo) {
+            showCustomAlert("Warning: You have previous time logs with missing Client, Project, or Task information. Please update them before closing the app.");
+            if (document.body.classList.contains('mini-mode')) {
+              restoreWindow();
+            }
+            return; // Block close
+          }
+
           if (activeSession) {
+            const client = clientInput.value.trim();
             const project = projectInput.value.trim();
             const task = taskInput.value.trim();
 
-            if (!project || !task) {
-              alert("Wait! Please fill in the Project and Task before shutting down.");
+            if (!client || !project || !task) {
+              showCustomAlert("Wait! Please fill in the Client, Project and Task before shutting down.");
               // If we are in mini mode, we should restore so the user can see the inputs
               if (document.body.classList.contains('mini-mode')) {
                 restoreWindow();
@@ -622,7 +686,89 @@
           // Tell main process it is safe to quit now
           ipcRenderer.send('quit-app');
         });
+
+        // We also need to intercept the mini-mode transition
+        ipcRenderer.on('check-can-mini-mode', () => {
+          let hasMissingInfo = false;
+          for (const log of logs) {
+            if (!log.client || !log.project || !log.task) {
+              hasMissingInfo = true;
+              break;
+            }
+          }
+
+          const client = clientInput.value.trim();
+          const project = projectInput.value.trim();
+          const task = taskInput.value.trim();
+          if (!client || !project || !task) {
+            hasMissingInfo = true;
+          }
+
+          if (hasMissingInfo) {
+            showCustomAlert("Warning: You have previous time logs or the current timer inputs have missing Client, Project, or Task information. Please update them before minimizing to the mini window.");
+            // Do not send the go-ahead
+          } else {
+            ipcRenderer.send('allow-mini-mode');
+          }
+        });
+
+        // Intercept the native window minimize
+        ipcRenderer.on('check-can-minimize', () => {
+          let hasMissingInfo = false;
+          for (const log of logs) {
+            if (!log.client || !log.project || !log.task) {
+              hasMissingInfo = true;
+              break;
+            }
+          }
+
+          const client = clientInput.value.trim();
+          const project = projectInput.value.trim();
+          const task = taskInput.value.trim();
+          if (!client || !project || !task) {
+            hasMissingInfo = true;
+          }
+
+          if (hasMissingInfo) {
+            showCustomAlert("Warning: You have previous time logs or the current timer inputs have missing Client, Project, or Task information. Please update them before minimizing.");
+            // Do not send the go-ahead
+          } else {
+            ipcRenderer.send('allow-minimize');
+          }
+        });
       }
+    }
+
+    // --- Custom Modal Logic ---
+    function showCustomAlert(message, callback) {
+      document.getElementById('modalMessage').textContent = message;
+      const actions = document.getElementById('modalActions');
+      actions.innerHTML = '<button class="btn btn-primary btn-modal" id="modalOkBtn">OK</button>';
+      document.getElementById('customModal').classList.remove('hidden');
+
+      document.getElementById('modalOkBtn').onclick = () => {
+        document.getElementById('customModal').classList.add('hidden');
+        if (callback) callback();
+      };
+    }
+
+    function showCustomConfirm(message, callback) {
+      document.getElementById('modalMessage').textContent = message;
+      const actions = document.getElementById('modalActions');
+      actions.innerHTML = `
+        <button class="btn btn-stop btn-modal" id="modalCancelBtn">Cancel</button>
+        <button class="btn btn-start btn-modal" id="modalConfirmBtn" style="margin-left: 10px;">Yes</button>
+      `;
+      document.getElementById('customModal').classList.remove('hidden');
+
+      document.getElementById('modalCancelBtn').onclick = () => {
+        document.getElementById('customModal').classList.add('hidden');
+        callback(false);
+      };
+      document.getElementById('modalConfirmBtn').onclick = () => {
+        document.getElementById('customModal').classList.add('hidden');
+        callback(true);
+      };
     }
 
     // --- User Logic ---
@@ -643,6 +789,18 @@
       });
     }
 
+    function updateClientList() {
+      const uniqueClients = [
+        ...new Set(logs.map((log) => log.client).filter(Boolean)),
+      ];
+      clientSuggestions.innerHTML = "";
+      uniqueClients.forEach((client) => {
+        const option = document.createElement("option");
+        option.value = client;
+        clientSuggestions.appendChild(option);
+      });
+    }
+
     // --- Core Logic ---
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -659,8 +817,15 @@
     }
 
     function startTimer() {
+      const client = clientInput.value.trim();
       const project = projectInput.value.trim();
       const task = taskInput.value.trim();
+
+      if (!client) {
+        clientInput.classList.add("input-error");
+      } else {
+        clientInput.classList.remove("input-error");
+      }
 
       if (!project) {
         projectInput.classList.add("input-error");
@@ -674,18 +839,45 @@
         taskInput.classList.remove("input-error");
       }
 
+      if (!client || !project || !task) {
+        showCustomAlert("Please fill in the Client, Project, and Task before starting the timer.");
+        return;
+      }
+
       // Check if it's a new project (only if it's not empty)
       if (project) {
         const existingProjects = [...new Set(logs.map((l) => l.project))];
         if (!existingProjects.includes(project)) {
-          const confirmed = window.confirm(
-            `"${project}" is a new project. Do you want to add it?`,
-          );
-          if (!confirmed) return;
+          showCustomConfirm(`"${project}" is a new project. Do you want to add it?`, (confirmed) => {
+            if (!confirmed) return;
+            checkNewClientAndStart(client, project, task);
+          });
+          return;
         }
       }
 
+      checkNewClientAndStart(client, project, task);
+    }
+
+    function checkNewClientAndStart(client, project, task) {
+      // Check if it's a new client (only if it's not empty)
+      if (client) {
+        const existingClients = [...new Set(logs.map((l) => l.client))];
+        if (!existingClients.includes(client)) {
+          showCustomConfirm(`"${client}" is a new client. Do you want to add it?`, (confirmed) => {
+            if (!confirmed) return;
+            finalizeStartTimer(client, project, task);
+          });
+          return;
+        }
+      }
+
+      finalizeStartTimer(client, project, task);
+    }
+
+    function finalizeStartTimer(client, project, task) {
       activeSession = {
+        client: client,
         project: project,
         task: task,
         startTime: Date.now(),
@@ -713,6 +905,7 @@
       if (!activeSession) return;
 
       // When stopping the timer, if the fields are empty now, grab whatever the user typed
+      const finalClient = clientInput.value.trim();
       const finalProject = projectInput.value.trim();
       const finalTask = taskInput.value.trim();
 
@@ -724,6 +917,7 @@
       // Save log
       const newLog = {
         id: Date.now().toString(),
+        client: finalClient,
         project: finalProject,
         task: finalTask,
         username: currentUsername,
@@ -752,6 +946,7 @@
       startBtn.classList.remove("hidden");
 
       updateProjectList();
+      updateClientList();
       renderLogs();
     }
 
@@ -762,18 +957,7 @@
       renderLogs();
     }
 
-    function clearLogs() {
-      if (logs.length === 0) return;
-      const confirmClear = window.confirm(
-        "Are you sure you want to delete all time logs? This cannot be undone.",
-      );
-      if (confirmClear) {
-        logs = [];
-        localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-        updateProjectList();
-        renderLogs();
-      }
-    }
+
 
     // --- UI Rendering ---
     function parseTimeStringToDate(baseDate, timeStr) {
@@ -817,6 +1001,7 @@
 
       localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
       updateProjectList();
+      updateClientList();
     }
 
     function renderLogs() {
@@ -842,6 +1027,9 @@
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
+          <td>
+            <input type="text" class="input-field" style="padding: 4px; width: 100%; min-width: 120px; font-size: 0.875rem;" value="${escapeHTML(log.client || "")}" onchange="updateLogField('${log.id}', 'client', this.value.trim())" list="clientSuggestions" title="Edit Client">
+          </td>
           <td>
             <input type="text" class="input-field" style="padding: 4px; width: 100%; min-width: 120px; font-size: 0.875rem;" value="${escapeHTML(log.project)}" onchange="updateLogField('${log.id}', 'project', this.value.trim())" list="projectSuggestions" title="Edit Project">
           </td>
@@ -893,6 +1081,7 @@
     function getCSVContent(logsToExport = logs) {
       const headers = [
         "Username",
+        "Client",
         "Project",
         "Task",
         "Date",
@@ -913,12 +1102,14 @@
         // Make sure we use the username attached to the log if it exists, otherwise fall back to global
         const entryUsername = log.username !== undefined ? log.username : currentUsername;
         const userEscaped = `"${entryUsername.replace(/"/g, '""')}"`;
-        const projectEscaped = `"${log.project.replace(/"/g, '""')}"`;
+        const clientEscaped = `"${(log.client || "").replace(/"/g, '""')}"`;
+        const projectEscaped = `"${(log.project || "").replace(/"/g, '""')}"`;
         const taskEscaped = `"${(log.task || "").replace(/"/g, '""')}"`;
 
         csvRows.push(
           [
             userEscaped,
+            clientEscaped,
             projectEscaped,
             taskEscaped,
             `"${date}"`,
@@ -991,6 +1182,7 @@
           localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
           renderLogs();
           updateProjectList();
+          updateClientList();
           return;
         }
 
@@ -1021,6 +1213,7 @@
 
           renderLogs();
           updateProjectList();
+          updateClientList();
         }
       }
     }
