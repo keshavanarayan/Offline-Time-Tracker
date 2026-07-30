@@ -7,19 +7,19 @@
   <title>Time Tracker by Spacio Techtonics</title>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-color: #f3f4f6;
+      --primary: #0f172a;
+      --primary-hover: #1e293b;
+      --bg-color: #f8fafc;
       --card-bg: #ffffff;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border-color: #e5e7eb;
-      --success: #10b981;
-      --success-hover: #059669;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --success: #0f172a;
+      --success-hover: #1e293b;
+      --danger: #dc2626;
+      --danger-hover: #991b1b;
       --input-bg: #ffffff;
-      --input-disabled: #f3f4f6;
+      --input-disabled: #f1f5f9;
     }
 
     * {
@@ -29,76 +29,92 @@
     }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
       padding: 20px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
+      -webkit-font-smoothing: antialiased;
     }
 
     .app-container {
-      /*max-width: 1300px;*/
       width: 100%;
       background-color: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       height: 95vh;
-      /* Fill entire window since there is no native frame */
     }
 
     .header {
-      background-color: var(--primary);
-      color: white;
-      padding: 20px 24px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 16px;
+      border-bottom: 1px solid #1e293b;
     }
 
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.125rem;
       font-weight: 600;
+      letter-spacing: -0.01em;
       margin: 0;
+      color: #ffffff;
+    }
+
+    .header h1 span, .header h1 a {
+      color: #94a3b8 !important;
+      font-weight: 400 !important;
     }
 
     .header-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .btn {
-      padding: 8px 16px;
-      border: none;
+      padding: 7px 14px;
+      border: 1px solid #334155;
       border-radius: 6px;
       cursor: pointer;
       font-weight: 500;
-      font-size: 0.875rem;
-      transition: background-color 0.2s;
+      font-size: 0.8125rem;
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      background-color: #1e293b;
+      color: #f8fafc;
+    }
+
+    .btn:hover {
+      background-color: #334155;
+      border-color: #475569;
     }
 
     .status-btn {
-      padding: 8px 16px;
-      border: none;
+      padding: 7px 14px;
+      border: 1px solid #334155;
       border-radius: 6px;
       font-weight: 500;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       cursor: default;
-      color: white;
+      color: #94a3b8;
+      background-color: #0f172a;
     }
 
     .input-field {
@@ -109,12 +125,12 @@
       outline: none;
       background-color: var(--input-bg);
       color: var(--text-main);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .input-field:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+      border-color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
     }
 
     .input-field:disabled {
@@ -136,10 +152,10 @@
     }
 
     .timer-section {
-      background-color: #f9fafb;
+      background-color: #ffffff;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 24px;
+      border-radius: 8px;
+      padding: 20px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -158,43 +174,46 @@
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       flex: 1;
       min-width: 150px;
     }
 
     .input-group label {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
     }
 
     .input-group input,
     .input-group select {
-      padding: 12px 16px;
-      font-size: 1rem;
+      padding: 10px 14px;
+      font-size: 0.9375rem;
       width: 100%;
     }
 
     .timer-controls {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
     }
 
     .timer-display {
-      font-size: 3rem;
-      font-family: 'Courier New', Courier, monospace;
-      font-weight: 700;
+      font-size: 2.75rem;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-weight: 600;
       color: var(--text-main);
-      letter-spacing: 2px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
 
     .btn-timer {
-      height: 56px;
-      width: 56px;
+      height: 48px;
+      width: 48px;
       border-radius: 50%;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -202,17 +221,17 @@
       color: white;
       border: none;
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
     }
 
     .btn-start {
-      background-color: var(--success);
+      background-color: var(--primary);
     }
 
     .btn-start:hover {
-      background-color: var(--success-hover);
-      transform: scale(1.05);
+      background-color: var(--primary-hover);
+      transform: scale(1.03);
     }
 
     .btn-stop {
@@ -221,7 +240,7 @@
 
     .btn-stop:hover {
       background-color: var(--danger-hover);
-      transform: scale(1.05);
+      transform: scale(1.03);
     }
 
     .hidden {
@@ -260,23 +279,24 @@
     body.mini-mode .timer-section {
       background-color: transparent;
       border: none;
-      padding: 10px;
+      padding: 4px 8px;
       justify-content: center;
       margin: 0;
       height: 100%;
     }
 
     body.mini-mode .timer-controls {
-      gap: 16px;
+      gap: 10px;
     }
 
     body.mini-mode .timer-display {
-      font-size: 2.25rem;
+      font-size: 1.5rem;
     }
 
     body.mini-mode .btn-timer {
-      height: 48px;
-      width: 48px;
+      height: 32px;
+      width: 32px;
+      font-size: 0.875rem;
     }
 
     .btn-restore {
@@ -303,7 +323,7 @@
     .logs-section {
       flex-grow: 1;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -312,7 +332,7 @@
 
     .logs-header {
       padding: 16px 24px;
-      background-color: #f9fafb;
+      background-color: #ffffff;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
@@ -320,12 +340,13 @@
     }
 
     .logs-header h2 {
-      font-size: 1.125rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       color: var(--text-main);
       margin: 0;
     }
-
 
     .table-container {
       overflow-y: auto;
@@ -340,27 +361,31 @@
 
     th,
     td {
-      padding: 12px 24px;
+      padding: 12px 20px;
       font-size: 0.875rem;
       white-space: nowrap;
     }
 
     th {
-      background-color: #f9fafb;
-      color: var(--text-muted);
+      background-color: #f8fafc;
+      color: #64748b;
       font-weight: 600;
-      text-transform: uppercase;
       font-size: 0.75rem;
+      text-transform: uppercase;
       letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
       position: sticky;
       top: 0;
       z-index: 10;
-      border-bottom: 1px solid var(--border-color);
     }
 
     tr {
-      border-bottom: 1px solid var(--border-color);
-      transition: background-color 0.1s;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.12s ease;
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
     }
 
     tr:last-child {
@@ -433,7 +458,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(15, 23, 42, 0.6);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -442,26 +467,65 @@
 
     .modal-content {
       background: var(--card-bg);
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 500px;
-      font-size: 1.5rem;
-      /* Bigger text */
+      padding: 24px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      width: 90%;
+      max-width: 440px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
       text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      color: var(--text-color);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      color: var(--text-main);
+      font-family: inherit;
     }
 
     .modal-actions {
-      margin-top: 24px;
+      margin-top: 20px;
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .btn-modal {
-      padding: 10px 24px;
-      font-size: 1.25rem;
+      padding: 8px 20px;
+      font-size: 0.875rem;
+      font-family: inherit;
+    }
+
+    /* Interactive Tutorial Spotlight & Popover */
+    .tutorial-highlight {
+      position: relative;
+      z-index: 10001 !important;
+      outline: 2px solid #0f172a !important;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.15), 0 0 12px rgba(15, 23, 42, 0.2) !important;
+      border-radius: 6px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    #tutorialOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 10000;
+      pointer-events: auto;
+    }
+
+    #tutorialPopover {
+      position: fixed;
+      z-index: 10002;
+      width: 320px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+      font-family: inherit;
+      transition: all 0.25s ease-out;
     }
 
     /* Custom Title Bar */
@@ -544,24 +608,29 @@
 
     <!-- Header -->
     <div class="header">
-      <h1>Time Tracker</h1>
-      <p style="font-size: 0.875rem; font-weight: 500; color: var(--text-muted);">by Spacio Techtonics</p>
+      <h1>Time Tracker <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">by </span><a
+          href="http://spaciotechtonics.info" style="font-size: 1rem; font-weight: 500; color: var(--text-muted);"
+          target="_blank">Spacio
+          Techtonics</a></h1>
+
       <div class="header-actions">
-        <div id="autoUpdateStatusBtn" class="status-btn hidden" title="Checking update server status..."
-          style="background-color: var(--text-muted);">
-          🔄 Checking Updates...
+        <div id="autoUpdateStatusBtn" class="status-btn hidden" onclick="setupAutoUpdate()" style="cursor: pointer;" title="Click to change update folder location">
+          Checking Updates...
         </div>
-        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn"
-          style="background-color: rgba(255, 255, 255, 0.2); color: white;"
-          onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
-          onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'"
-          title="Set folder for automatic weekly exports">
-          ⚙️ Setup Auto-Export
+        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn" title="Set folder for automatic weekly exports">
+          Auto-Export
         </button>
         <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
-          title="Enter your name" />
+          title="Enter your name" style="background-color: #1e293b; color: #ffffff; border-color: #334155;" />
+        <button id="tutorialBtn" onclick="openTutorial()" class="btn" title="View app tutorial guide">
+          Tutorial
+        </button>
         <button id="exportBtn" onclick="exportCSV()" class="btn">
-          📄 Export CSV
+          Export CSV
+        </button>
+        <button id="donateBtn" onclick="openURL('https://rzp.io/rzp/RvtFEof')"
+          class="btn" title="Support this project">
+          Donate
         </button>
       </div>
     </div>
@@ -601,6 +670,7 @@
         <div class="timer-controls">
           <div id="timerDisplay" class="timer-display">00:00:00</div>
           <button id="startBtn" onclick="startTimer()" class="btn-timer btn-start" title="Start Timer">▶</button>
+          <button id="pauseBtn" onclick="togglePauseTimer()" class="btn-timer btn-start hidden" title="Pause Timer">⏸</button>
           <button id="stopBtn" onclick="stopTimer()" class="btn-timer btn-stop hidden" title="Stop Timer">■</button>
           <button id="restoreBtn" onclick="restoreWindow()" class="btn-timer btn-restore"
             title="Restore Window">⤢</button>
@@ -652,6 +722,25 @@
     </div>
   </div>
 
+  <!-- Interactive Tutorial Popover Container -->
+  <div id="tutorialOverlay" class="hidden"></div>
+  <div id="tutorialPopover" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 12px;">
+      <h3 id="tutorialTitle" style="font-size: 0.9375rem; font-weight: 700; color: var(--text-main); margin: 0;">App Guide</h3>
+      <span id="tutorialStepIndicator" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Step 1 of 5</span>
+    </div>
+    <div id="tutorialBody" style="font-size: 0.875rem; color: var(--text-main); min-height: 80px; line-height: 1.5;">
+      <!-- Step content populated dynamically -->
+    </div>
+    <div class="modal-actions" style="justify-content: space-between; border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 12px;">
+      <button class="btn" id="tutorialPrevBtn" onclick="prevTutorialStep()">Back</button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="closeTutorial()" style="background-color: transparent; color: var(--text-muted); border: none;">Skip</button>
+        <button class="btn btn-start" id="tutorialNextBtn" onclick="nextTutorialStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- State Management ---
     const STORAGE_KEY_LOGS = "offlineTimeTrackerLogs";
@@ -687,11 +776,16 @@
     const projectSuggestions = document.getElementById("projectSuggestions");
     const timerDisplay = document.getElementById("timerDisplay");
     const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
     const stopBtn = document.getElementById("stopBtn");
     const logsTableBody = document.getElementById("logsTableBody");
     const emptyState = document.getElementById("emptyState");
     const autoExportBtn = document.getElementById("autoExportBtn");
     const logsTable = document.getElementById("logsTable");
+
+    let isPaused = false;
+    let pausedTimeAcc = 0;
+    let pauseStartTime = null;
 
     // --- Initialization ---
     function init() {
@@ -708,8 +802,6 @@
 
       if (ipcRenderer) {
         checkUpdateServerStatus();
-
-        // Check if we need to auto-export right now (and check every hour thereafter)
         checkAutoExport();
         setInterval(checkAutoExport, 60 * 60 * 1000);
       } else {
@@ -723,13 +815,16 @@
         taskInput.value = activeSession.task || "";
 
         startBtn.classList.add("hidden");
+        pauseBtn.classList.remove("hidden");
         stopBtn.classList.remove("hidden");
 
         timerInterval = setInterval(updateDisplay, 1000);
         updateDisplay();
-      } else {
-        // Auto-start new timer if none active
-        // startTimer(); // Removed auto-start to prevent immediate validation on load
+      }
+
+      // Automatically trigger tutorial on first run
+      if (!localStorage.getItem(STORAGE_KEY_TUTORIAL)) {
+        setTimeout(openTutorial, 400);
       }
 
       // Set up IPC listeners
@@ -846,28 +941,19 @@
     async function setupAutoUpdate() {
       if (!ipcRenderer) return;
 
-      const proceed = confirm("Would you like to change the update folder location? If you cancel, it will default to \\\\YOUR_SERVER\\Tools.");
-      if (!proceed) {
-        localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
-        checkUpdateServerStatus(); // Test the fallback default
-        return;
-      }
-
       const selectedPath = await ipcRenderer.invoke('select-update-folder');
       if (selectedPath) {
-        const confirmChange = confirm(`Are you sure you want to change the update location to:\n${selectedPath}`);
-        if (confirmChange) {
-          localStorage.setItem(STORAGE_KEY_UPDATE_FOLDER, selectedPath);
-          checkUpdateServerStatus();
-        } else {
-          // User picked a path but didn't confirm setting it
-          localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
-          checkUpdateServerStatus();
-        }
-      } else {
-        // User aborted the folder picker dialog
-        localStorage.removeItem(STORAGE_KEY_UPDATE_FOLDER);
+        localStorage.setItem(STORAGE_KEY_UPDATE_FOLDER, selectedPath);
+        alert(`Update folder location set to:\n${selectedPath}`);
         checkUpdateServerStatus();
+      }
+    }
+
+    function openURL(url) {
+      if (ipcRenderer) {
+        ipcRenderer.send('open-url', url);
+      } else {
+        window.open(url, '_blank');
       }
     }
 
@@ -881,12 +967,14 @@
       try {
         const isOnline = await ipcRenderer.invoke('check-update-server', customFolder);
         if (isOnline) {
-          statusBtn.style.backgroundColor = "var(--success)";
-          statusBtn.innerHTML = "✅ Update Server Online";
+          statusBtn.style.backgroundColor = "#16a34a";
+          statusBtn.style.color = "#ffffff";
+          statusBtn.innerHTML = "Update Server Online";
           statusBtn.title = `The LAN update server is accessible at ${customFolder || "\\\\YOUR_SERVER\\Tools"}.\nClick to configure.`;
         } else {
-          statusBtn.style.backgroundColor = "var(--danger)";
-          statusBtn.innerHTML = "❌ Update Server Offline";
+          statusBtn.style.backgroundColor = "#dc2626";
+          statusBtn.style.color = "#ffffff";
+          statusBtn.innerHTML = "Update Server Offline";
           statusBtn.title = `Cannot reach ${customFolder || "\\\\YOUR_SERVER\\Tools"}. Updates may not work.\nClick to configure.`;
         }
 
@@ -894,23 +982,142 @@
           ipcRenderer.send('set-update-url', customFolder);
         }
       } catch (e) {
-        statusBtn.style.backgroundColor = "var(--danger)";
-        statusBtn.innerHTML = "❌ Update Check Failed";
+        statusBtn.style.backgroundColor = "#dc2626";
+        statusBtn.style.color = "#ffffff";
+        statusBtn.innerHTML = "Update Check Failed";
         statusBtn.title = "Error checking the update server.\nClick to configure.";
       }
     }
 
-    // --- Custom Modal Logic ---
-    function showCustomAlert(message, callback) {
-      document.getElementById('modalMessage').textContent = message;
-      const actions = document.getElementById('modalActions');
-      actions.innerHTML = '<button class="btn btn-primary btn-modal" id="modalOkBtn">OK</button>';
-      document.getElementById('customModal').classList.remove('hidden');
+    // --- Interactive Tutorial Popover & Spotlight Logic ---
+    const STORAGE_KEY_TUTORIAL = "offlineTimeTrackerTutorialSeen";
+    let currentTutorialStep = 0;
 
-      document.getElementById('modalOkBtn').onclick = () => {
-        document.getElementById('customModal').classList.add('hidden');
-        if (callback) callback();
-      };
+    const tutorialSteps = [
+      {
+        target: ".app-container",
+        title: "Important Note: Full Screen & Mini Mode",
+        content: "<div style='background-color: #f8fafc; border-left: 3px solid #0f172a; padding: 10px; margin-bottom: 8px;'><strong style='color:#0f172a;'>Full Screen Startup:</strong> This app intentionally opens in full screen on startup to prompt work logging.</div><p>Please note that the app <strong>will not minimize to Mini Mode</strong> until you enter your Client, Project, and Task information and start the timer.</p>",
+        position: "center"
+      },
+      {
+        target: "#usernameInput",
+        title: "1. User Identity Setup",
+        content: "Enter your name here. All exported CSV timesheets will tag your entries with this name.",
+        position: "bottom-left"
+      },
+      {
+        target: ".timer-controls",
+        title: "2. Timer Controls",
+        content: "Fill in Client, Project, and Task details, then use <strong>▶ (Start)</strong>, <strong>⏸ (Pause)</strong>, and <strong>■ (Stop)</strong> to track your work session.",
+        position: "top-left"
+      },
+      {
+        target: ".timer-section",
+        title: "3. Project & Task Inputs",
+        content: "Type your Client and Project names here. The app automatically saves and suggests your previous entries as you type.",
+        position: "bottom-left"
+      },
+      {
+        target: "#autoExportBtn",
+        title: "4. Auto-Export Location",
+        content: "Click here to set your auto-export folder (can be a <strong>local folder</strong> on your PC or a <strong>shared LAN drive</strong>). The app automatically backs up weekly CSV timesheets every Monday.",
+        position: "bottom-left"
+      },
+      {
+        target: "#autoUpdateStatusBtn",
+        title: "5. Update Server Status",
+        content: "Shows whether the update folder is accessible (Green = Online, Red = Offline). Click anytime to configure your update folder location (supports both <strong>local folders</strong> and <strong>LAN network shares</strong>).",
+        position: "bottom-left"
+      },
+      {
+        target: "#donateBtn",
+        title: "6. Support Project Development",
+        content: "If Offline Time Tracker helps your firm stay organized, consider supporting our ongoing development! Click <strong>Donate</strong> anytime to support this project.",
+        position: "bottom-left"
+      }
+    ];
+
+    function openTutorial() {
+      currentTutorialStep = 0;
+      document.getElementById('tutorialOverlay').classList.remove('hidden');
+      document.getElementById('tutorialPopover').classList.remove('hidden');
+      renderTutorialStep();
+    }
+
+    function closeTutorial() {
+      document.getElementById('tutorialOverlay').classList.add('hidden');
+      document.getElementById('tutorialPopover').classList.add('hidden');
+      clearTutorialHighlights();
+      localStorage.setItem(STORAGE_KEY_TUTORIAL, "true");
+    }
+
+    function clearTutorialHighlights() {
+      document.querySelectorAll('.tutorial-highlight').forEach(el => {
+        el.classList.remove('tutorial-highlight');
+      });
+    }
+
+    function renderTutorialStep() {
+      clearTutorialHighlights();
+      const step = tutorialSteps[currentTutorialStep];
+      const targetEl = document.querySelector(step.target);
+
+      document.getElementById('tutorialTitle').textContent = step.title;
+      document.getElementById('tutorialStepIndicator').textContent = `Step ${currentTutorialStep + 1} of ${tutorialSteps.length}`;
+      document.getElementById('tutorialBody').innerHTML = step.content;
+
+      const prevBtn = document.getElementById('tutorialPrevBtn');
+      const nextBtn = document.getElementById('tutorialNextBtn');
+
+      prevBtn.style.visibility = currentTutorialStep === 0 ? "hidden" : "visible";
+      nextBtn.textContent = currentTutorialStep === tutorialSteps.length - 1 ? "Got it!" : "Next";
+
+      const popover = document.getElementById('tutorialPopover');
+
+      if (step.position === "center" || !targetEl || targetEl.offsetWidth === 0 || targetEl.offsetHeight === 0) {
+        popover.style.top = "50%";
+        popover.style.left = "50%";
+        popover.style.transform = "translate(-50%, -50%)";
+      } else {
+        popover.style.transform = "none";
+        targetEl.classList.add('tutorial-highlight');
+        const rect = targetEl.getBoundingClientRect();
+        
+        let top = rect.bottom + 10;
+        let left = rect.left;
+
+        if (step.position === "top-left") {
+          top = rect.top - 170;
+          left = rect.left;
+        } else if (step.position === "bottom-left") {
+          top = rect.bottom + 10;
+          left = Math.max(16, rect.left - 100);
+        }
+
+        // Keep inside viewport bounds
+        left = Math.min(window.innerWidth - 340, Math.max(16, left));
+        top = Math.min(window.innerHeight - 200, Math.max(16, top));
+
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+      }
+    }
+
+    function nextTutorialStep() {
+      if (currentTutorialStep < tutorialSteps.length - 1) {
+        currentTutorialStep++;
+        renderTutorialStep();
+      } else {
+        closeTutorial();
+      }
+    }
+
+    function prevTutorialStep() {
+      if (currentTutorialStep > 0) {
+        currentTutorialStep--;
+        renderTutorialStep();
+      }
     }
 
     function showCustomConfirm(message, callback) {
@@ -978,10 +1185,36 @@
       return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     }
 
+    function togglePauseTimer() {
+      if (!activeSession) return;
+
+      if (!isPaused) {
+        // Pause timer
+        isPaused = true;
+        pauseStartTime = Date.now();
+        clearInterval(timerInterval);
+        pauseBtn.innerHTML = "▶";
+        pauseBtn.title = "Resume Timer";
+      } else {
+        // Resume timer
+        isPaused = false;
+        if (pauseStartTime) {
+          pausedTimeAcc += (Date.now() - pauseStartTime);
+          pauseStartTime = null;
+        }
+        timerInterval = setInterval(updateDisplay, 1000);
+        pauseBtn.innerHTML = "⏸";
+        pauseBtn.title = "Pause Timer";
+      }
+    }
+
     function updateDisplay() {
       if (!activeSession) return;
-      const elapsed = Date.now() - activeSession.startTime;
-      timerDisplay.textContent = formatTime(elapsed);
+      let elapsed = Date.now() - activeSession.startTime - pausedTimeAcc;
+      if (isPaused && pauseStartTime) {
+        elapsed = pauseStartTime - activeSession.startTime - pausedTimeAcc;
+      }
+      timerDisplay.textContent = formatTime(Math.max(0, elapsed));
     }
 
     function startTimer() {
@@ -1044,6 +1277,10 @@
     }
 
     function finalizeStartTimer(client, project, task) {
+      isPaused = false;
+      pausedTimeAcc = 0;
+      pauseStartTime = null;
+
       activeSession = {
         client: client,
         project: project,
@@ -1052,11 +1289,10 @@
       };
       localStorage.setItem(STORAGE_KEY_ACTIVE, JSON.stringify(activeSession));
 
-      // Do NOT disable the inputs here, because the user needs to be able to fill them while timer runs
-      // projectInput.disabled = true;
-      // taskInput.disabled = true;
-
       startBtn.classList.add("hidden");
+      pauseBtn.classList.remove("hidden");
+      pauseBtn.innerHTML = "⏸";
+      pauseBtn.title = "Pause Timer";
       stopBtn.classList.remove("hidden");
 
       timerInterval = setInterval(updateDisplay, 1000);
@@ -1072,7 +1308,11 @@
     function stopTimer() {
       if (!activeSession) return;
 
-      // When stopping the timer, if the fields are empty now, grab whatever the user typed
+      // Expand to full screen if currently in mini mode when stopping
+      if (document.body.classList.contains("mini-mode")) {
+        restoreWindow();
+      }
+
       const finalClient = clientInput.value.trim();
       const finalProject = projectInput.value.trim();
       const finalTask = taskInput.value.trim();
@@ -1080,7 +1320,7 @@
       clearInterval(timerInterval);
 
       const endTime = Date.now();
-      const duration = endTime - activeSession.startTime;
+      const duration = (endTime - activeSession.startTime) - pausedTimeAcc;
 
       // Save log
       const newLog = {
@@ -1091,7 +1331,7 @@
         username: currentUsername,
         startTime: activeSession.startTime,
         endTime: endTime,
-        duration: duration,
+        duration: Math.max(0, duration),
       };
 
       logs.unshift(newLog); // Add to beginning of array
@@ -1099,6 +1339,9 @@
 
       // Clear active session
       activeSession = null;
+      isPaused = false;
+      pausedTimeAcc = 0;
+      pauseStartTime = null;
       localStorage.removeItem(STORAGE_KEY_ACTIVE);
 
       // Reset UI
@@ -1110,6 +1353,7 @@
 
       timerDisplay.textContent = "00:00:00";
 
+      pauseBtn.classList.add("hidden");
       stopBtn.classList.add("hidden");
       startBtn.classList.remove("hidden");
 

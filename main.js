@@ -86,14 +86,8 @@ function createWindow() {
     }
   });
 
-  mainWindow.on('minimize', (e) => {
-    if (!isMinimizing) {
-      e.preventDefault();
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore();
-      }
-      mainWindow.webContents.send('check-can-minimize');
-    }
+  mainWindow.on('minimize', () => {
+    isMinimizing = true;
   });
 
   mainWindow.on('restore', () => {
@@ -177,8 +171,8 @@ ipcMain.on('allow-mini-mode', () => {
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     }
-    mainWindow.setMinimumSize(350, 80); // Allow shrinking
-    mainWindow.setSize(350, 80);
+    mainWindow.setMinimumSize(220, 50); // Allow shrinking smaller
+    mainWindow.setSize(260, 56);
     mainWindow.setMenuBarVisibility(false);
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.webContents.send('toggle-mini-mode', true);
@@ -213,7 +207,7 @@ ipcMain.handle('check-update-server', async (event, customFolder) => {
 
 // IPC handler to open a folder selection dialog for updates
 ipcMain.handle('select-update-folder', async (event) => {
-  const result = await dialog.showOpenDialog({
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory'],
     title: 'Select Folder for Auto-Updates'
   });
@@ -239,7 +233,7 @@ ipcMain.on('set-update-url', (event, customFolder) => {
 
 // IPC handler to open a folder selection dialog
 ipcMain.handle('select-folder', async (event) => {
-  const result = await dialog.showOpenDialog({
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory'],
     title: 'Select Folder for Auto-Export'
   });
@@ -266,5 +260,12 @@ ipcMain.handle('save-csv-auto', async (event, data) => {
   } catch (err) {
     console.error('Failed to auto-export CSV:', err);
     return false;
+  }
+});
+
+// IPC handler to open external URLs securely in default system browser
+ipcMain.on('open-url', (event, url) => {
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    require('electron').shell.openExternal(url);
   }
 });
