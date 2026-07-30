@@ -153,11 +153,10 @@ ipcMain.on('restore-window', () => {
   }
 });
 
-// IPC handler to explicitly initiate a close (from custom title bar)
+// IPC handler to explicitly initiate a close (from custom title bar or Shutdown button)
 ipcMain.on('close-window', () => {
   if (mainWindow) {
-    // This triggers the same 'close' event handler below, executing the check
-    mainWindow.close();
+    mainWindow.webContents.send('app-closing');
   }
 });
 
@@ -190,6 +189,9 @@ ipcMain.on('allow-minimize', () => {
 // IPC handler for finally quitting the app safely
 ipcMain.on('quit-app', () => {
   isQuitting = true;
+  if (mainWindow) {
+    mainWindow.destroy();
+  }
   app.quit();
 });
 

@@ -632,6 +632,13 @@
           class="btn" title="Support this project">
           Donate
         </button>
+        <button id="shutdownBtn" onclick="closeApp()" class="btn" style="background-color: #dc2626; border-color: #b91c1c;" title="Shutdown and close application">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+          Shutdown
+        </button>
       </div>
     </div>
 
@@ -662,7 +669,6 @@
               <option value="Views">Views</option>
               <option value="GFC">GFC</option>
               <option value="Estimation">Estimation</option>
-              <option value="Completion">Completion</option>
             </select>
           </div>
         </div>
@@ -749,6 +755,7 @@
     const STORAGE_KEY_EXPORT_FOLDER = "offlineTimeTrackerExportFolder";
     const STORAGE_KEY_LAST_EXPORT = "offlineTimeTrackerLastExport";
     const STORAGE_KEY_UPDATE_FOLDER = "offlineTimeTrackerUpdateFolder";
+    const STORAGE_KEY_HEARTBEAT = "offlineTimeTrackerLastHeartbeat";
 
     let logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [];
     let activeSession = JSON.parse(localStorage.getItem(STORAGE_KEY_ACTIVE)) || null;
@@ -810,16 +817,24 @@
 
       // Resume timer if page was closed while running
       if (activeSession) {
-        clientInput.value = activeSession.client || "";
-        projectInput.value = activeSession.project || "";
-        taskInput.value = activeSession.task || "";
+        const lastHeartbeat = parseInt(localStorage.getItem(STORAGE_KEY_HEARTBEAT) || "0", 10);
+        const now = Date.now();
 
-        startBtn.classList.add("hidden");
-        pauseBtn.classList.remove("hidden");
-        stopBtn.classList.remove("hidden");
+        // ponytail: auto-stops session if PC was shut down (heartbeat gap > 30s)
+        if (lastHeartbeat > 0 && (now - lastHeartbeat) > 30000) {
+          autoStopAbortedSession(lastHeartbeat);
+        } else {
+          clientInput.value = activeSession.client || "";
+          projectInput.value = activeSession.project || "";
+          taskInput.value = activeSession.task || "";
 
-        timerInterval = setInterval(updateDisplay, 1000);
-        updateDisplay();
+          startBtn.classList.add("hidden");
+          pauseBtn.classList.remove("hidden");
+          stopBtn.classList.remove("hidden");
+
+          timerInterval = setInterval(updateDisplay, 1000);
+          updateDisplay();
+        }
       }
 
       // Automatically trigger tutorial on first run
@@ -1208,11 +1223,44 @@
       }
     }
 
+    function autoStopAbortedSession(lastHeartbeat) {
+      if (!activeSession) return;
+      const duration = (lastHeartbeat - activeSession.startTime) - pausedTimeAcc;
+      const newLog = {
+        id: Date.now().toString(),
+        client: activeSession.client || "",
+        project: activeSession.project || "",
+        task: activeSession.task || "",
+        username: currentUsername,
+        startTime: activeSession.startTime,
+        endTime: lastHeartbeat,
+        duration: Math.max(0, duration),
+      };
+      logs.unshift(newLog);
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+
+      activeSession = null;
+      isPaused = false;
+      pausedTimeAcc = 0;
+      pauseStartTime = null;
+      localStorage.removeItem(STORAGE_KEY_ACTIVE);
+      localStorage.removeItem(STORAGE_KEY_HEARTBEAT);
+
+      timerDisplay.textContent = "00:00:00";
+      pauseBtn.classList.add("hidden");
+      stopBtn.classList.add("hidden");
+      startBtn.classList.remove("hidden");
+
+      renderLogs();
+    }
+
     function updateDisplay() {
       if (!activeSession) return;
       let elapsed = Date.now() - activeSession.startTime - pausedTimeAcc;
       if (isPaused && pauseStartTime) {
         elapsed = pauseStartTime - activeSession.startTime - pausedTimeAcc;
+      } else {
+        localStorage.setItem(STORAGE_KEY_HEARTBEAT, Date.now().toString());
       }
       timerDisplay.textContent = formatTime(Math.max(0, elapsed));
     }
@@ -1288,6 +1336,7 @@
         startTime: Date.now(),
       };
       localStorage.setItem(STORAGE_KEY_ACTIVE, JSON.stringify(activeSession));
+      localStorage.setItem(STORAGE_KEY_HEARTBEAT, Date.now().toString());
 
       startBtn.classList.add("hidden");
       pauseBtn.classList.remove("hidden");
@@ -1343,6 +1392,7 @@
       pausedTimeAcc = 0;
       pauseStartTime = null;
       localStorage.removeItem(STORAGE_KEY_ACTIVE);
+      localStorage.removeItem(STORAGE_KEY_HEARTBEAT);
 
       // Reset UI
       projectInput.disabled = false;
@@ -1453,7 +1503,6 @@
               <option value="Views" ${log.task === 'Views' ? 'selected' : ''}>Views</option>
               <option value="GFC" ${log.task === 'GFC' ? 'selected' : ''}>GFC</option>
               <option value="Estimation" ${log.task === 'Estimation' ? 'selected' : ''}>Estimation</option>
-              <option value="Completion" ${log.task === 'Completion' ? 'selected' : ''}>Completion</option>
             </select>
           </td>
           <td>
