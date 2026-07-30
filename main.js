@@ -153,8 +153,15 @@ ipcMain.on('restore-window', () => {
   }
 });
 
-// IPC handler to explicitly initiate a close (from custom title bar or Shutdown button)
+// IPC handler from title bar X button -> triggers window close check (mini-mode)
 ipcMain.on('close-window', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
+// IPC handler from Shutdown button -> requests full application exit
+ipcMain.on('request-shutdown', () => {
   if (mainWindow) {
     mainWindow.webContents.send('app-closing');
   }
