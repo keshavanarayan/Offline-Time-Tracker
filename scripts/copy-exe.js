@@ -68,10 +68,9 @@ async function run() {
   try {
     console.log(`\n📦 Organizing release packages into Offline-Time-Tracker-dist...\n`);
 
-    // Remove old dist folder if exists
-    const oldDist = path.join(rootDir, 'dist');
-    if (fs.existsSync(oldDist)) {
-      fs.rmSync(oldDist, { recursive: true, force: true });
+    // Clean dist folder
+    if (fs.existsSync(distDir)) {
+      fs.rmSync(distDir, { recursive: true, force: true });
     }
 
     fs.mkdirSync(firstTimeDir, { recursive: true });
