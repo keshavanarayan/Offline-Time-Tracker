@@ -8,17 +8,19 @@
 
 - **Studio Hours Aesthetic:** Minimalist black & white architectural design, crisp typography, dark slate top bar, and clean visual hierarchy.
 - **Client-Project Coupling & Dynamic Suggestions:** Project suggestions automatically filter based on the typed/selected Client. Explicit separate creation confirmations for new Clients and new Client-Project combinations.
-- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, and **Shutdown**.
-- **6:00 PM Shutdown Safeguard:** The **Shutdown** button (located in Advanced Settings) is restricted before 6:00 PM (instructing users to minimize via top-right `X`). After 6:00 PM, prompts for confirmation (*"Are you going home and is your work complete for today?"*).
-- **Mini Mode Requirements:** Minimizing to the floating Mini Mode window (via top-right `X` button) requires selecting Client, Project, Task, AND actively starting the timer (`▶`).
+- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, **Set Deadline Time**, and **Shutdown**.
+- **Silent Shutdown Button:** The **Shutdown** button in Advanced Settings saves any active session and exits immediately without popups or prompts.
+- **Configurable Closing Deadline & 2-Button Title Bar:** 
+  - **`-` (Minimize Button):** Minimizes to floating Mini Mode. Requires Client, Project, Task, AND an active running timer (`▶`).
+  - **`X` (Close Button):** Restricts closing before your configured deadline time (configurable via Advanced Settings in 12-hour format; default 6:00 PM). After the deadline, prompts *"Are you going home and is your work complete for today?"* and closes the app on **Yes**.
 - **PC Shutdown & Crash Protection:** 5-second active heartbeat system that automatically finalizes and saves active work sessions if the PC shuts down, sleeps, or loses power.
 - **100% Offline Independence:** Zero external CDN, Google Fonts, or internet API dependencies. Runs completely offline.
 - **Interactive Onboarding Spotlight Tour:** Element-targeted guided walkthrough highlighting key app controls on first launch or via `Advanced Settings → Tutorial`.
 - **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging.
 - **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
 - **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
-- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\YOUR_SERVER\common\TimeLog`).
-- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share (`\\YOUR_SERVER\common\dist`) for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
+- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\YOUR_SERVER\\common\\TimeLog`).
+- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share (`\\\\YOUR_SERVER\\common\\dist`) for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
 - **Run on Startup:** Automatically configures itself to launch when Windows starts up.
 - **Support & Donations:** Integrated Razorpay payment link support directly via the `Donate` button.
 
@@ -35,15 +37,22 @@ npm start
 ```
 
 ### 2. Build Windows Executable Installers (`.exe`)
-To package and generate distribution files, run:
+To package and generate distribution files locally, run:
 
 ```bash
 npm run make
 ```
 
-`forge.config.js` is optimized to ignore generated binaries and build artifacts, completing package generation in seconds:
+`forge.config.js` packages generated binaries locally in seconds:
 - 📁 **First Time Install:** `Offline-Time-Tracker-dist/First-Time-Install/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES` for new PC installs)
-- 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment package for `\\YOUR_SERVER\common\dist`)
+- 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment packages)
+
+### 3. Deploy to LAN Server
+To deploy release packages to the shared LAN network folder (`\\\\YOUR_SERVER\\common\\Offline-Time-Tracker-dist`), run:
+
+```bash
+npm run deploy
+```
 
 ---
 

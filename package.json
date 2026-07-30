@@ -10,6 +10,7 @@
     "premake": "node scripts/premake.js",
     "make": "electron-forge make",
     "postmake": "node scripts/copy-exe.js",
+    "deploy": "node scripts/deploy-server.js",
     "publish": "node scripts/publish-release.js"
   },
   "repository": {
