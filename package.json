@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "premake": "node -e \"const fs=require('fs'); fs.rmSync('resources', { recursive: true, force: true });\"",
+    "premake": "node scripts/premake.js",
     "make": "electron-forge make",
     "postmake": "node scripts/copy-exe.js",
     "publish": "node scripts/publish-release.js"

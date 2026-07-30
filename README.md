@@ -7,12 +7,14 @@
 ## Key Features
 
 - **Studio Hours Aesthetic:** Minimalist black & white architectural design, crisp typography, dark slate top bar, and clean visual hierarchy.
+- **Client-Project Coupling & Dynamic Suggestions:** Project suggestions automatically filter based on the typed/selected Client. Explicit separate creation confirmations for new Clients and new Client-Project combinations.
+- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, and **Shutdown**.
+- **6:00 PM Shutdown Safeguard:** The **Shutdown** button (located in Advanced Settings) is restricted before 6:00 PM (instructing users to minimize via top-right `X`). After 6:00 PM, prompts for confirmation (*"Are you going home and is your work complete for today?"*).
+- **Mini Mode Requirements:** Minimizing to the floating Mini Mode window (via top-right `X` button) requires selecting Client, Project, Task, AND actively starting the timer (`▶`).
 - **PC Shutdown & Crash Protection:** 5-second active heartbeat system that automatically finalizes and saves active work sessions if the PC shuts down, sleeps, or loses power.
-- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, and **Export CSV**.
-- **Header Shutdown Button:** Integrated red Shutdown button with a power icon for clean, safe application exit.
 - **100% Offline Independence:** Zero external CDN, Google Fonts, or internet API dependencies. Runs completely offline.
 - **Interactive Onboarding Spotlight Tour:** Element-targeted guided walkthrough highlighting key app controls on first launch or via `Advanced Settings → Tutorial`.
-- **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging. Mini Mode resizing is unlocked once Client, Project, and Task inputs are entered.
+- **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging.
 - **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
 - **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
 - **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\YOUR_SERVER\common\TimeLog`).
@@ -39,7 +41,7 @@ To package and generate distribution files, run:
 npm run make
 ```
 
-Once `npm run make` completes, build artifacts are automatically organized into:
+`forge.config.js` is optimized to ignore generated binaries and build artifacts, completing package generation in seconds:
 - 📁 **First Time Install:** `Offline-Time-Tracker-dist/First-Time-Install/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES` for new PC installs)
 - 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment package for `\\YOUR_SERVER\common\dist`)
 
