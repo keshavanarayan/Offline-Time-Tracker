@@ -587,6 +587,52 @@
       display: none;
       /* Hide title bar in mini-mode */
     }
+
+    /* Advanced Settings Dropdown Styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 6px;
+      background-color: #1e293b;
+      min-width: 170px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .dropdown-content.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      color: #f8fafc;
+      padding: 10px 14px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color 0.15s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: #334155;
+    }
   </style>
 </head>
 
@@ -622,12 +668,42 @@
         </button>
         <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
           title="Enter your name" style="background-color: #1e293b; color: #ffffff; border-color: #334155;" />
-        <button id="tutorialBtn" onclick="openTutorial()" class="btn" title="View app tutorial guide">
-          Tutorial
-        </button>
-        <button id="exportBtn" onclick="exportCSV()" class="btn">
-          Export CSV
-        </button>
+        
+        <!-- Advanced Settings Dropdown -->
+        <div class="dropdown" id="advancedSettingsDropdown">
+          <button onclick="toggleAdvancedSettings()" class="btn" title="Advanced Settings">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Advanced Settings ▾
+          </button>
+          <div class="dropdown-content" id="advancedSettingsMenu">
+            <button class="dropdown-item" id="checkUpdateBtn" onclick="manualCheckForUpdates(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+              Check Updates
+            </button>
+            <button class="dropdown-item" id="tutorialBtn" onclick="openTutorial(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Tutorial
+            </button>
+            <button class="dropdown-item" id="exportBtn" onclick="exportCSV(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+
         <button id="donateBtn" onclick="openURL('https://rzp.io/rzp/RvtFEof')"
           class="btn" title="Support this project">
           Donate
@@ -964,6 +1040,34 @@
       }
     }
 
+    function toggleAdvancedSettings() {
+      const menu = document.getElementById("advancedSettingsMenu");
+      if (menu) menu.classList.toggle("show");
+    }
+
+    // Close dropdown when clicking outside
+    window.addEventListener("click", function(event) {
+      if (!event.target.closest("#advancedSettingsDropdown")) {
+        const menu = document.getElementById("advancedSettingsMenu");
+        if (menu && menu.classList.contains("show")) {
+          menu.classList.remove("show");
+        }
+      }
+    });
+
+    function manualCheckForUpdates() {
+      if (!ipcRenderer) return;
+      const btn = document.getElementById("checkUpdateBtn");
+      btn.innerText = "Checking...";
+      ipcRenderer.send('trigger-update-check');
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg> Check Updates`;
+      }, 3000);
+    }
+
     function openURL(url) {
       if (ipcRenderer) {
         ipcRenderer.send('open-url', url);
@@ -985,12 +1089,12 @@
           statusBtn.style.backgroundColor = "#16a34a";
           statusBtn.style.color = "#ffffff";
           statusBtn.innerHTML = "Update Server Online";
-          statusBtn.title = `The LAN update server is accessible at ${customFolder || "\\\\YOUR_SERVER\\Tools"}.\nClick to configure.`;
+          statusBtn.title = `The LAN update server is accessible at ${customFolder || "\\\\YOUR_SERVER\\common\\dist"}.\nClick to configure.`;
         } else {
           statusBtn.style.backgroundColor = "#dc2626";
           statusBtn.style.color = "#ffffff";
           statusBtn.innerHTML = "Update Server Offline";
-          statusBtn.title = `Cannot reach ${customFolder || "\\\\YOUR_SERVER\\Tools"}. Updates may not work.\nClick to configure.`;
+          statusBtn.title = `Cannot reach ${customFolder || "\\\\YOUR_SERVER\\common\\dist"}. Updates may not work.\nClick to configure.`;
         }
 
         if (isOnline) {

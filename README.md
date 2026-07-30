@@ -7,13 +7,16 @@
 ## Key Features
 
 - **Studio Hours Aesthetic:** Minimalist black & white architectural design, crisp typography, dark slate top bar, and clean visual hierarchy.
+- **PC Shutdown & Crash Protection:** 5-second active heartbeat system that automatically finalizes and saves active work sessions if the PC shuts down, sleeps, or loses power.
+- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, and **Export CSV**.
+- **Header Shutdown Button:** Integrated red Shutdown button with a power icon for clean, safe application exit.
 - **100% Offline Independence:** Zero external CDN, Google Fonts, or internet API dependencies. Runs completely offline.
-- **Interactive Onboarding Spotlight Tour:** Element-targeted 6-step guided walkthrough highlighting key app controls on first launch or anytime via the `Tutorial` button.
-- **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging. Mini Mode resizing is unlocked once Client, Project, and Task inputs are entered and timing starts.
+- **Interactive Onboarding Spotlight Tour:** Element-targeted guided walkthrough highlighting key app controls on first launch or via `Advanced Settings → Tutorial`.
+- **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging. Mini Mode resizing is unlocked once Client, Project, and Task inputs are entered.
 - **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
-- **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base, down to `220px × 50px`) that stays on top during work. Automatically expands back to full window mode when stopping a session.
-- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\SERVER\Shared`).
-- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share for auto-updates. Features a visual status badge (Green for Online, Red for Offline).
+- **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
+- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\YOUR_SERVER\common\TimeLog`).
+- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share (`\\YOUR_SERVER\common\dist`) for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
 - **Run on Startup:** Automatically configures itself to launch when Windows starts up.
 - **Support & Donations:** Integrated Razorpay payment link support directly via the `Donate` button.
 
@@ -23,24 +26,22 @@
 
 ### 1. Run in Development Mode
 `npm start` launches the app for live testing.  
-> **Note:** `npm start` does **NOT** build or generate the `.exe` file.
+> **Note:** `npm start` does **NOT** build or generate installer packages.
 
 ```bash
 npm start
 ```
 
-### 2. Build Windows Executable Installer (`.exe`)
-To package and generate the standalone Windows installer executable, run:
+### 2. Build Windows Executable Installers (`.exe`)
+To package and generate distribution files, run:
 
 ```bash
 npm run make
 ```
 
-Once the command finishes, your setup installer is output to:
-- Root directory: `Offline-Time-Tracker-2.0.0 Setup.exe`
-- Forge directory: `out/make/squirrel.windows/x64/`
-
-Double-click the setup file to install the application on any PC.
+Once `npm run make` completes, build artifacts are automatically organized into:
+- 📁 **First Time Install:** `Offline-Time-Tracker-dist/First-Time-Install/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES` for new PC installs)
+- 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment package for `\\YOUR_SERVER\common\dist`)
 
 ---
 

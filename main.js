@@ -9,11 +9,11 @@ if (require('electron-squirrel-startup')) {
 
 // Setup Auto Updater pointing to the LAN shared folder
 if (app.isPackaged) {
-  const updateFolder = '\\\\YOUR_SERVER\\Tools';
+  const updateFolder = '\\\\YOUR_SERVER\\common\\dist';
 
   try {
     // Initial feed URL fallback
-    autoUpdater.setFeedURL({ url: '\\\\YOUR_SERVER\\Tools' });
+    autoUpdater.setFeedURL({ url: '\\\\YOUR_SERVER\\common\\dist' });
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
       const dialogOpts = {
@@ -197,7 +197,7 @@ ipcMain.on('quit-app', () => {
 
 // IPC handler to check if update server is accessible
 ipcMain.handle('check-update-server', async (event, customFolder) => {
-  const updateFolder = customFolder || '\\\\YOUR_SERVER\\Tools';
+  const updateFolder = customFolder || '\\\\YOUR_SERVER\\common\\dist';
   try {
     // Check if the directory is reachable and readable
     await fs.promises.access(updateFolder, fs.constants.R_OK);
@@ -224,11 +224,23 @@ ipcMain.handle('select-update-folder', async (event) => {
 ipcMain.on('set-update-url', (event, customFolder) => {
   if (app.isPackaged) {
     try {
-      const updateFolder = customFolder || '\\\\YOUR_SERVER\\Tools';
+      const updateFolder = customFolder || '\\\\YOUR_SERVER\\common\\dist';
       autoUpdater.setFeedURL({ url: updateFolder });
       console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
+      autoUpdater.checkForUpdates();
     } catch (err) {
       console.error('Failed to set AutoUpdater URL:', err);
+    }
+  }
+});
+
+// IPC handler to manually trigger update check from UI
+ipcMain.on('trigger-update-check', () => {
+  if (app.isPackaged) {
+    try {
+      autoUpdater.checkForUpdates();
+    } catch (err) {
+      console.error('Manual update check failed:', err);
     }
   }
 });

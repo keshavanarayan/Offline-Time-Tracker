@@ -1,3 +1,7 @@
-node_modules
-out
+node_modules/
+out/
+dist/
+Offline-Time-Tracker-dist/
+x64/
 *.exe
+*.nupkg
