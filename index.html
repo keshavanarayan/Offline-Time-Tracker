@@ -642,6 +642,7 @@
     <div class="title-bar" id="titleBar">
       <div class="title-bar-title"> </div>
       <div class="title-bar-controls">
+        <button class="control-btn minimize" onclick="minimizeToMiniMode()" title="Minimize to Mini Mode">&#xE921;</button>
         <button class="control-btn close" onclick="closeApp()" title="Close">&#xE8BB;</button>
       </div>
     </div>
@@ -700,6 +701,13 @@
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
               Export CSV
+            </button>
+            <button class="dropdown-item" id="setDeadlineBtn" onclick="configureDeadlineTime(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Set Deadline Time
             </button>
             <button class="dropdown-item" id="shutdownBtn" onclick="shutdownApp(); toggleAdvancedSettings();" style="color: #ef4444;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -832,10 +840,12 @@
     const STORAGE_KEY_LAST_EXPORT = "offlineTimeTrackerLastExport";
     const STORAGE_KEY_UPDATE_FOLDER = "offlineTimeTrackerUpdateFolder";
     const STORAGE_KEY_HEARTBEAT = "offlineTimeTrackerLastHeartbeat";
+    const STORAGE_KEY_DEADLINE_HOUR = "offlineTimeTrackerDeadlineHour";
 
     let logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [];
     let activeSession = JSON.parse(localStorage.getItem(STORAGE_KEY_ACTIVE)) || null;
     let currentUsername = localStorage.getItem(STORAGE_KEY_USERNAME) || "";
+    let deadlineHour = parseInt(localStorage.getItem(STORAGE_KEY_DEADLINE_HOUR) || "18", 10);
     let timerInterval = null;
 
     // --- Electron Integration ---
@@ -1275,25 +1285,84 @@
       };
     }
 
+    function showTimePickerModal(currentHour, callback) {
+      document.getElementById('modalMessage').textContent = "Select Closing Deadline Time:";
+      const actions = document.getElementById('modalActions');
+
+      let selectOptions = '';
+      for (let h = 0; h < 24; h++) {
+        const label = formatHour12(h);
+        const selected = h === currentHour ? 'selected' : '';
+        selectOptions += `<option value="${h}" ${selected}>${label}</option>`;
+      }
+
+      actions.innerHTML = `
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 16px; align-items: center;">
+          <select id="deadlineTimeSelect" class="input-field" style="width: 200px; padding: 10px; font-size: 1rem; text-align: center; background-color: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+            ${selectOptions}
+          </select>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-stop btn-modal" id="modalCancelTimeBtn">Cancel</button>
+            <button class="btn btn-start btn-modal" id="modalSaveTimeBtn">Save Deadline</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('customModal').classList.remove('hidden');
+
+      document.getElementById('modalCancelTimeBtn').onclick = () => {
+        document.getElementById('customModal').classList.add('hidden');
+        callback(null);
+      };
+      document.getElementById('modalSaveTimeBtn').onclick = () => {
+        const selectedVal = parseInt(document.getElementById('deadlineTimeSelect').value, 10);
+        document.getElementById('customModal').classList.add('hidden');
+        callback(selectedVal);
+      };
+    }
+
+    function formatHour12(hour24) {
+      const period = hour24 >= 12 ? 'PM' : 'AM';
+      const h12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+      return `${h12}:00 ${period}`;
+    }
+
+    function configureDeadlineTime() {
+      showTimePickerModal(deadlineHour, (newHour) => {
+        if (newHour !== null) {
+          deadlineHour = newHour;
+          localStorage.setItem(STORAGE_KEY_DEADLINE_HOUR, deadlineHour.toString());
+          showCustomAlert(`Closing deadline updated to ${formatHour12(deadlineHour)}.`);
+        }
+      });
+    }
+
     // --- Window Controls ---
-    function closeApp() {
+    function minimizeToMiniMode() {
       if (ipcRenderer) {
         ipcRenderer.send('close-window');
       }
     }
 
-    function shutdownApp() {
+    function closeApp() {
       const now = new Date();
-      if (now.getHours() < 18) {
-        showCustomAlert("Shutdown is disabled before 6:00 PM. Please minimize the app using the top-right close button (X) to continue tracking your work.");
+      if (now.getHours() < deadlineHour) {
+        showCustomAlert(`Application closing is disabled before ${formatHour12(deadlineHour)}. Please use the minimize (-) button to minimize to mini mode.`);
         return;
       }
-
       showCustomConfirm("Are you going home and is your work complete for today?", (confirmed) => {
-        if (confirmed && ipcRenderer) {
-          ipcRenderer.send('request-shutdown');
+        if (confirmed) {
+          shutdownApp();
         }
       });
+    }
+
+    function shutdownApp() {
+      if (activeSession) {
+        stopTimer();
+      }
+      if (ipcRenderer) {
+        ipcRenderer.send('quit-app');
+      }
     }
 
     // --- User Logic ---
