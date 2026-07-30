@@ -74,8 +74,27 @@ async function run() {
       fs.rmSync(oldDist, { recursive: true, force: true });
     }
 
-    await copyDirectoryWithProgress(sourceDir, firstTimeDir, 'First-Time-Install');
-    await copyDirectoryWithProgress(sourceDir, updateFolderDir, 'Update-Folder');
+    fs.mkdirSync(firstTimeDir, { recursive: true });
+    fs.mkdirSync(updateFolderDir, { recursive: true });
+
+    const files = fs.readdirSync(sourceDir);
+
+    for (const file of files) {
+      const srcFile = path.join(sourceDir, file);
+      const stat = fs.statSync(srcFile);
+
+      if (stat.isFile()) {
+        // Copy Setup installer to First-Time-Install
+        if (file.endsWith('.exe')) {
+          await copyFileWithProgress(srcFile, path.join(firstTimeDir, file), `First-Time-Install -> ${file}`);
+        }
+
+        // Copy RELEASES file and .nupkg packages to Update-Folder for auto-updating
+        if (file === 'RELEASES' || file.endsWith('.nupkg')) {
+          await copyFileWithProgress(srcFile, path.join(updateFolderDir, file), `Update-Folder -> ${file}`);
+        }
+      }
+    }
 
     console.log(`\n✅ Build Artifacts Prepared Successfully!`);
     console.log(`📁 First-Time Install Folder: ${firstTimeDir}`);
