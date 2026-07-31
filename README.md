@@ -19,8 +19,8 @@
 - **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging.
 - **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
 - **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
-- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive** (`\\YOUR_SERVER\\common\\TimeLog`).
-- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share (`\\\\YOUR_SERVER\\common\\dist`) for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
+- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive**.
+- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
 - **Run on Startup:** Automatically configures itself to launch when Windows starts up.
 - **Support & Donations:** Integrated Razorpay payment link support directly via the `Donate` button.
 
@@ -48,7 +48,7 @@ npm run make
 - 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment packages)
 
 ### 3. Deploy to LAN Server
-To deploy release packages to the shared LAN network folder (`\\\\YOUR_SERVER\\common\\Offline-Time-Tracker-dist`), run:
+To deploy release packages to a configured shared network folder, set `DEPLOY_SERVER_PATH` in your environment and run:
 
 ```bash
 npm run deploy

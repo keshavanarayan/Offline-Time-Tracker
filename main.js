@@ -9,31 +9,32 @@ if (require('electron-squirrel-startup')) {
 
 // Setup Auto Updater pointing to the LAN shared folder
 if (app.isPackaged) {
-  const updateFolder = '\\\\YOUR_SERVER\\common\\dist';
+  const updateFolder = process.env.UPDATE_SERVER_PATH;
 
-  try {
-    // Initial feed URL fallback
-    autoUpdater.setFeedURL({ url: '\\\\YOUR_SERVER\\common\\dist' });
+  if (updateFolder) {
+    try {
+      autoUpdater.setFeedURL({ url: updateFolder });
 
-    autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['Restart', 'Later'],
-        title: 'Application Update',
-        message: process.platform === 'win32' ? releaseNotes : releaseName,
-        detail: 'A new version has been downloaded. Restart the application to apply the updates.'
-      };
+      autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+        const dialogOpts = {
+          type: 'info',
+          buttons: ['Restart', 'Later'],
+          title: 'Application Update',
+          message: process.platform === 'win32' ? releaseNotes : releaseName,
+          detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+        };
 
-      dialog.showMessageBox(dialogOpts).then((returnValue) => {
-        if (returnValue.response === 0) autoUpdater.quitAndInstall();
+        dialog.showMessageBox(dialogOpts).then((returnValue) => {
+          if (returnValue.response === 0) autoUpdater.quitAndInstall();
+        });
       });
-    });
 
-    autoUpdater.on('error', message => {
-      console.error('There was a problem updating the application:', message);
-    });
-  } catch (err) {
-    console.error('AutoUpdater setup failed:', err);
+      autoUpdater.on('error', message => {
+        console.error('There was a problem updating the application:', message);
+      });
+    } catch (err) {
+      console.error('AutoUpdater setup failed:', err);
+    }
   }
 }
 
@@ -204,7 +205,8 @@ ipcMain.on('quit-app', () => {
 
 // IPC handler to check if update server is accessible
 ipcMain.handle('check-update-server', async (event, customFolder) => {
-  const updateFolder = customFolder || '\\\\YOUR_SERVER\\common\\dist';
+  const updateFolder = customFolder || process.env.UPDATE_SERVER_PATH;
+  if (!updateFolder) return false;
   try {
     // Check if the directory is reachable and readable
     await fs.promises.access(updateFolder, fs.constants.R_OK);
@@ -231,10 +233,12 @@ ipcMain.handle('select-update-folder', async (event) => {
 ipcMain.on('set-update-url', (event, customFolder) => {
   if (app.isPackaged) {
     try {
-      const updateFolder = customFolder || '\\\\YOUR_SERVER\\common\\dist';
-      autoUpdater.setFeedURL({ url: updateFolder });
-      console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
-      autoUpdater.checkForUpdates();
+      const updateFolder = customFolder || process.env.UPDATE_SERVER_PATH;
+      if (updateFolder) {
+        autoUpdater.setFeedURL({ url: updateFolder });
+        console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
+        autoUpdater.checkForUpdates();
+      }
     } catch (err) {
       console.error('Failed to set AutoUpdater URL:', err);
     }

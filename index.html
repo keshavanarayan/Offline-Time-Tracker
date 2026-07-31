@@ -1103,12 +1103,12 @@
           statusBtn.style.backgroundColor = "#16a34a";
           statusBtn.style.color = "#ffffff";
           statusBtn.innerHTML = "Update Server Online";
-          statusBtn.title = `The LAN update server is accessible at ${customFolder || "\\\\YOUR_SERVER\\common\\dist"}.\nClick to configure.`;
+          statusBtn.title = `The update server is accessible at ${customFolder || "configured path"}.\nClick to configure.`;
         } else {
           statusBtn.style.backgroundColor = "#dc2626";
           statusBtn.style.color = "#ffffff";
           statusBtn.innerHTML = "Update Server Offline";
-          statusBtn.title = `Cannot reach ${customFolder || "\\\\YOUR_SERVER\\common\\dist"}. Updates may not work.\nClick to configure.`;
+          statusBtn.title = `Cannot reach ${customFolder || "configured path"}. Updates may not work.\nClick to configure.`;
         }
 
         if (isOnline) {
