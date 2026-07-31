@@ -46,8 +46,15 @@ npm run make
 `forge.config.js` packages all generated binaries directly into:
 - 📁 **Distribution Folder:** `Offline-Time-Tracker-dist/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES`)
 
-### 3. Deploy to LAN Server
-To deploy release packages to a configured shared network folder, set `DEPLOY_SERVER_PATH` in your environment and run:
+### 3. Verify Deployment & Environment Readiness
+Run the environment pre-check script to verify build artifacts and LAN share accessibility:
+
+```bash
+npm run check-env
+```
+
+### 4. Deploy to LAN Server
+To deploy release packages to a configured shared network folder, run:
 
 ```bash
 npm run deploy
@@ -55,21 +62,15 @@ npm run deploy
 
 ---
 
-## Technologies Used
-- HTML / CSS / Vanilla JavaScript
-- [Electron](https://www.electronjs.org/)
-- [Electron Forge](https://www.electronforge.io/)
-
----
-
 ## Release Process
 
-Publishing a version tag automatically builds and drafts a release via GitHub Actions:
+Automated tag creation, changelog generation, and GitHub release binary compilation via GitHub Actions:
 
 ```bash
-git tag v2.0.0
-git push origin v2.0.0
+npm run publish
 ```
+
+This interactive command updates `package.json`, generates a changelog in `README.md`, creates and pushes a version tag (e.g. `v2.0.1`), and triggers GitHub Actions to build and attach the `.exe`, `.nupkg`, and `RELEASES` assets to GitHub Releases.
 
 ---
 
