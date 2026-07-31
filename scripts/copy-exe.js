@@ -4,8 +4,6 @@ const path = require('path');
 const sourceDir = path.join(__dirname, '..', 'out', 'make', 'squirrel.windows', 'x64');
 const rootDir = path.join(__dirname, '..');
 const distDir = path.join(rootDir, 'Offline-Time-Tracker-dist');
-const firstTimeDir = path.join(distDir, 'First-Time-Install');
-const updateFolderDir = path.join(distDir, 'Update-Folder');
 
 function copyFileWithProgress(src, dest, label) {
   return new Promise((resolve, reject) => {
@@ -41,23 +39,6 @@ function copyFileWithProgress(src, dest, label) {
   });
 }
 
-async function copyDirectoryWithProgress(srcDir, destDir, targetName) {
-  fs.mkdirSync(destDir, { recursive: true });
-  const files = fs.readdirSync(srcDir);
-
-  for (const file of files) {
-    const srcFile = path.join(srcDir, file);
-    const destFile = path.join(destDir, file);
-    const stat = fs.statSync(srcFile);
-
-    if (stat.isDirectory()) {
-      await copyDirectoryWithProgress(srcFile, destFile, targetName);
-    } else {
-      await copyFileWithProgress(srcFile, destFile, `${targetName} -> ${file}`);
-    }
-  }
-}
-
 async function run() {
   if (!fs.existsSync(sourceDir)) {
     console.error(`\n❌ Error: Could not find x64 folder at ${sourceDir}`);
@@ -73,8 +54,7 @@ async function run() {
       fs.rmSync(distDir, { recursive: true, force: true });
     }
 
-    fs.mkdirSync(firstTimeDir, { recursive: true });
-    fs.mkdirSync(updateFolderDir, { recursive: true });
+    fs.mkdirSync(distDir, { recursive: true });
 
     const files = fs.readdirSync(sourceDir);
 
@@ -83,21 +63,12 @@ async function run() {
       const stat = fs.statSync(srcFile);
 
       if (stat.isFile()) {
-        // Copy Setup installer to First-Time-Install
-        if (file.endsWith('.exe')) {
-          await copyFileWithProgress(srcFile, path.join(firstTimeDir, file), `First-Time-Install -> ${file}`);
-        }
-
-        // Copy RELEASES file and .nupkg packages to Update-Folder for auto-updating
-        if (file === 'RELEASES' || file.endsWith('.nupkg')) {
-          await copyFileWithProgress(srcFile, path.join(updateFolderDir, file), `Update-Folder -> ${file}`);
-        }
+        await copyFileWithProgress(srcFile, path.join(distDir, file), `Offline-Time-Tracker-dist -> ${file}`);
       }
     }
 
     console.log(`\n✅ Build Artifacts Prepared Successfully!`);
-    console.log(`📁 First-Time Install Folder: ${firstTimeDir}`);
-    console.log(`📁 Update Folder (for LAN Share): ${updateFolderDir}\n`);
+    console.log(`📁 Distribution Folder: ${distDir}\n`);
   } catch (err) {
     console.error(`\n❌ Failed to prepare build folders:`, err);
   }

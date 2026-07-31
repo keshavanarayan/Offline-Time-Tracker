@@ -43,9 +43,8 @@ To package and generate distribution files locally, run:
 npm run make
 ```
 
-`forge.config.js` packages generated binaries locally in seconds:
-- 📁 **First Time Install:** `Offline-Time-Tracker-dist/First-Time-Install/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES` for new PC installs)
-- 📁 **Update Server Folder:** `Offline-Time-Tracker-dist/Update-Folder/` (Contains deployment packages)
+`forge.config.js` packages all generated binaries directly into:
+- 📁 **Distribution Folder:** `Offline-Time-Tracker-dist/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES`)
 
 ### 3. Deploy to LAN Server
 To deploy release packages to a configured shared network folder, set `DEPLOY_SERVER_PATH` in your environment and run:
