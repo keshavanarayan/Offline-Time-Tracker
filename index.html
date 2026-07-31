@@ -896,7 +896,7 @@
       if (ipcRenderer) {
         checkUpdateServerStatus();
         checkAutoExport();
-        setInterval(checkAutoExport, 60 * 60 * 1000);
+        setInterval(checkAutoExport, 60 * 1000); // Check auto-export every 1 minute
       } else {
         autoExportBtn.style.display = "none"; // Hide if just running in a standard web browser
       }
@@ -1810,9 +1810,6 @@
 
       if (folderPath) {
         localStorage.setItem(STORAGE_KEY_EXPORT_FOLDER, folderPath);
-        alert(
-          `Auto-export folder set to:\n${folderPath}\n\nYour timesheet will be saved here automatically every Monday for the previous week (Sunday to Saturday).`,
-        );
 
         autoExportBtn.classList.add("active");
         autoExportBtn.innerHTML = `✅ Auto-Export Active`;
@@ -1825,73 +1822,29 @@
 
       const now = new Date();
 
-      // Calculate the start of the current week (Sunday)
-      const currentSunday = new Date(now);
-      currentSunday.setDate(now.getDate() - now.getDay());
-      currentSunday.setHours(0, 0, 0, 0);
+      // Trigger export if current local time is 6:00 PM (18:00) or later
+      if (now.getHours() >= 18) {
+        const todayDateStr = now.toISOString().split("T")[0];
+        const lastExportDate = localStorage.getItem(STORAGE_KEY_LAST_EXPORT);
 
-      // Calculate the start of the previous week (Previous Sunday)
-      const previousSunday = new Date(currentSunday);
-      previousSunday.setDate(currentSunday.getDate() - 7);
+        if (lastExportDate !== todayDateStr) {
+          saveUsername();
+          const csvContent = getCSVContent(logs);
 
-      // Calculate the end of the previous week (Previous Saturday, 23:59:59)
-      const previousSaturday = new Date(currentSunday);
-      previousSaturday.setMilliseconds(-1);
+          const namePrefix = currentUsername
+            ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
+            : "";
+          const fileName = `Daily_Timesheet_${namePrefix}${todayDateStr}.csv`;
 
-      // We use the timestamp of the previous Sunday to identify this specific week
-      const weekIdentifier = previousSunday.getTime().toString();
+          const success = await window.electronAPI.invoke("save-csv-auto", {
+            folderPath: exportFolder,
+            fileName,
+            csvContent,
+          });
 
-      const lastExportWeek = localStorage.getItem(STORAGE_KEY_LAST_EXPORT);
-
-      // Only attempt export on Monday or later, and only if this specific week hasn't been exported yet
-      if (now.getDay() >= 1 && lastExportWeek !== weekIdentifier) {
-
-        // Filter logs that occurred between Previous Sunday (00:00:00) and Previous Saturday (23:59:59)
-        const weeklyLogs = logs.filter(log => {
-          return log.startTime >= previousSunday.getTime() && log.startTime <= previousSaturday.getTime();
-        });
-
-        // Don't export an empty file if they didn't work that week
-        if (weeklyLogs.length === 0) {
-          localStorage.setItem(STORAGE_KEY_LAST_EXPORT, weekIdentifier);
-
-          // Safely purge older logs
-          logs = logs.filter(log => log.startTime >= currentSunday.getTime());
-          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-          renderLogs();
-          updateProjectList();
-          updateClientList();
-          return;
-        }
-
-        saveUsername();
-        const csvContent = getCSVContent(weeklyLogs);
-
-        const startDateStr = previousSunday.toISOString().split("T")[0];
-        const endDateStr = new Date(previousSaturday).toISOString().split("T")[0];
-
-        const namePrefix = currentUsername
-          ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
-          : "";
-        const fileName = `Weekly_Timesheet_${namePrefix}${startDateStr}_to_${endDateStr}.csv`;
-
-        const success = await window.electronAPI.invoke("save-csv-auto", {
-          folderPath: exportFolder,
-          fileName,
-          csvContent,
-        });
-
-        if (success !== false) {
-          // Mark this week as successfully exported
-          localStorage.setItem(STORAGE_KEY_LAST_EXPORT, weekIdentifier);
-
-          // Keep only logs from the current week (from currentSunday onwards)
-          logs = logs.filter(log => log.startTime >= currentSunday.getTime());
-          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-
-          renderLogs();
-          updateProjectList();
-          updateClientList();
+          if (success !== false) {
+            localStorage.setItem(STORAGE_KEY_LAST_EXPORT, todayDateStr);
+          }
         }
       }
     }
