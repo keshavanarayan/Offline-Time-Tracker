@@ -19,7 +19,7 @@
 - **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging.
 - **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
 - **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
-- **Auto-Export to CSV:** Weekly auto-export of timesheets to a user-designated **local folder** or **shared LAN network drive**.
+- **Auto-Export to CSV:** Daily automatic export of timesheets at 6:00 PM to a user-designated **local folder** or **shared LAN network drive**.
 - **Update Server Folder Integration:** Easily configure a custom local folder or LAN share for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
 - **Run on Startup:** Automatically configures itself to launch when Windows starts up.
 - **Support & Donations:** Integrated Razorpay payment link support directly via the `Donate` button.
@@ -80,3 +80,26 @@ This interactive command updates `package.json`, generates a changelog in `READM
 Copyright (c) 2026 Keshava Narayan / Spacio Techtonics.  
 - **Free for Personal & Non-Commercial Use**  
 - **Commercial distribution or sale is strictly prohibited without permission.**
+
+
+## Changelog
+
+### v2.0.1 (2026-07-31)
+- refactor: change auto-export frequency to one minute and transition to daily CSV exports at 6 PM (4337f85)
+- docs: update README.md with npm run publish and check-env workflow documentation (1ef38d9)
+- feat: add zero-dependency env loader, check-env deployment readiness tool, and update release workflow (cc62588)
+- refactor: consolidate server path configuration to single DEPLOY_SERVER_PATH variable (3a98e4e)
+- refactor: flatten distribution artifacts into single Offline-Time-Tracker-dist folder (e055215)
+- chore: add .env.example template and remove sensitive build log (2bac950)
+- feat: add deployment script and parameterize update server path via environment variables (eae40bf)
+- feat: implement configurable closing deadlines, silent shutdown, and automated deployment script for LAN servers (9a38af1)
+- feat: add configurable daily deadline setting and minimize to mini mode functionality (d95956a)
+- feat: add script to organize and copy build artifacts into distribution folders (681a903)
+- feat: add script to automate organization of release artifacts into deployment folders (133d881)
+- chore: add build and distribution files to electron-forge ignore list (fcd62d6)
+- feat: add mandatory shutdown constraints, improved client-project validation, and updated UI controls (8145f5c)
+- feat: add advanced settings dropdown with manual update check and build artifact distribution script (897457e)
+- feat: add shutdown button and implement heartbeat-based auto-stop for crashed or aborted sessions (ed0f917)
+- style: redesign UI with modern Slate color palette and improved typography (eda4136)
+- feat: rebrand application title and header to Time Tracker by Spacio Techtonics (4e2daeb)
+- feat: Implement auto-update functionality with configurable LAN shared folder source and status display. (82b8535)
