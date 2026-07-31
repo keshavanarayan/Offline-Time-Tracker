@@ -5,4 +5,10 @@ Offline-Time-Tracker-dist/
 Offline-Time-Tracker-dist/*
 x64/
 *.exe
-*.nupkg
+*.nupkg
+.env
+!.env.example
+.env.*
+!.env.example
+*.log
+build-log.txt
