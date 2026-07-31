@@ -1,7 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog, autoUpdater } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, autoUpdater, powerMonitor } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-const { loadEnv } = require('./scripts/env-loader');
+const { loadEnv } = require('../scripts/env-loader');
 
 loadEnv();
 
@@ -56,12 +56,11 @@ function createWindow() {
     frame: false, // Make window frameless
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      // It's important to keep contextIsolation true and nodeIntegration false
-      // for security, which is the default in modern Electron.
+      // Keep contextIsolation true and nodeIntegration false for security
     }
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   // Launch app in true fullscreen state to hide taskbar
   mainWindow.setFullScreen(true);
@@ -97,9 +96,6 @@ function createWindow() {
   mainWindow.on('restore', () => {
     isMinimizing = false;
   });
-
-  // Open the DevTools for debugging (optional)
-  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
@@ -110,6 +106,19 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+
+  if (powerMonitor) {
+    powerMonitor.on('suspend', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app-closing');
+      }
+    });
+    powerMonitor.on('lock-screen', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app-closing');
+      }
+    });
+  }
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -128,7 +137,6 @@ app.whenReady().then(() => {
 });
 
 app.on('session-end', () => {
-  // Windows specific: indicates system is shutting down or user is logging off
   isShuttingDown = true;
   if (mainWindow) {
     mainWindow.webContents.send('app-closing');
@@ -147,11 +155,9 @@ app.on('window-all-closed', function () {
 ipcMain.on('restore-window', () => {
   if (mainWindow && isMiniMode) {
     isMiniMode = false;
-    mainWindow.setMinimumSize(800, 600); // Restore normal minimums
-    mainWindow.setFullScreen(true); // Restore to fullscreen
+    mainWindow.setMinimumSize(800, 600);
+    mainWindow.setFullScreen(true);
     mainWindow.setMenuBarVisibility(true);
-
-    // Ensure no other fullscreen app can overlay on top of it
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.webContents.send('toggle-mini-mode', false);
   }
@@ -181,7 +187,7 @@ ipcMain.on('allow-mini-mode', () => {
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     }
-    mainWindow.setMinimumSize(220, 50); // Allow shrinking smaller
+    mainWindow.setMinimumSize(220, 50);
     mainWindow.setSize(260, 56);
     mainWindow.setMenuBarVisibility(false);
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
@@ -211,7 +217,6 @@ ipcMain.handle('check-update-server', async (event, customFolder) => {
   const updateFolder = customFolder || process.env.DEPLOY_SERVER_PATH;
   if (!updateFolder) return false;
   try {
-    // Check if the directory is reachable and readable
     await fs.promises.access(updateFolder, fs.constants.R_OK);
     return true;
   } catch (err) {
@@ -227,7 +232,7 @@ ipcMain.handle('select-update-folder', async (event) => {
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
-    return result.filePaths[0]; // Return the selected folder path
+    return result.filePaths[0];
   }
   return null;
 });
@@ -267,7 +272,7 @@ ipcMain.handle('select-folder', async (event) => {
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
-    return result.filePaths[0]; // Return the selected folder path
+    return result.filePaths[0];
   }
   return null;
 });

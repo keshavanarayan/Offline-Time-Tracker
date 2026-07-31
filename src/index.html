@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Tracker by Spacio Techtonics</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Custom Title Bar -->
+    <div class="title-bar" id="titleBar">
+      <div class="title-bar-title"> </div>
+      <div class="title-bar-controls">
+        <button class="control-btn minimize" onclick="minimizeToMiniMode()" title="Minimize to Mini Mode">&#xE921;</button>
+        <button class="control-btn close" onclick="closeApp()" title="Close">&#xE8BB;</button>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <h1>Time Tracker <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">by </span><a
+          href="http://spaciotechtonics.info" style="font-size: 1rem; font-weight: 500; color: var(--text-muted);"
+          target="_blank">Spacio
+          Techtonics</a></h1>
+
+      <div class="header-actions">
+        <div id="autoUpdateStatusBtn" class="status-btn hidden" onclick="setupAutoUpdate()" style="cursor: pointer;" title="Click to change update folder location">
+          Checking Updates...
+        </div>
+        <button id="autoExportBtn" onclick="setupAutoExport()" class="btn" title="Set folder for automatic weekly exports">
+          Auto-Export
+        </button>
+        <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
+          title="Enter your name" style="background-color: #1e293b; color: #ffffff; border-color: #334155;" />
+        
+        <!-- Advanced Settings Dropdown -->
+        <div class="dropdown" id="advancedSettingsDropdown">
+          <button onclick="toggleAdvancedSettings()" class="btn" title="Advanced Settings">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Advanced Settings ▾
+          </button>
+          <div class="dropdown-content" id="advancedSettingsMenu">
+            <button class="dropdown-item" id="checkUpdateBtn" onclick="manualCheckForUpdates(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+              Check Updates
+            </button>
+            <button class="dropdown-item" id="tutorialBtn" onclick="openTutorial(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Tutorial
+            </button>
+            <button class="dropdown-item" id="exportBtn" onclick="exportCSV(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export CSV
+            </button>
+            <button class="dropdown-item" id="setDeadlineBtn" onclick="configureDeadlineTime(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Set Deadline Time
+            </button>
+            <button class="dropdown-item" id="deleteEntryBtn" onclick="clearAllLogs(); toggleAdvancedSettings();" style="color: #f87171;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Delete Entry
+            </button>
+            <button class="dropdown-item" id="shutdownBtn" onclick="shutdownApp(); toggleAdvancedSettings();" style="color: #ef4444;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+              </svg>
+              Shutdown
+            </button>
+          </div>
+        </div>
+
+        <button id="donateBtn" onclick="openURL('https://rzp.io/rzp/RvtFEof')"
+          class="btn" title="Support this project">
+          Donate
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Timer Section -->
+      <div class="timer-section">
+        <div class="inputs-row">
+          <div class="input-group">
+            <label for="clientInput">Client Name</label>
+            <input type="text" id="clientInput" class="input-field" list="clientSuggestions"
+              placeholder="e.g., Meera (or) SBI" oninput="updateProjectList()" onchange="updateProjectList()" />
+            <datalist id="clientSuggestions"></datalist>
+          </div>
+          <div class="input-group">
+            <label for="projectInput">Project Name</label>
+            <input type="text" id="projectInput" class="input-field" list="projectSuggestions"
+              placeholder="e.g., Residence (or) Saibaba Colony" />
+            <datalist id="projectSuggestions"></datalist>
+          </div>
+          <div class="input-group">
+            <label for="taskInput">Task</label>
+            <select id="taskInput" class="input-field">
+              <option value="Proposal" selected>Proposal</option>
+              <option value="Scheme">Scheme</option>
+              <option value="Views">Views</option>
+              <option value="GFC">GFC</option>
+              <option value="Estimation">Estimation</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="timer-controls">
+          <div id="timerDisplay" class="timer-display">00:00:00</div>
+          <button id="startBtn" onclick="startTimer()" class="btn-timer btn-start" title="Start Timer">▶</button>
+          <button id="pauseBtn" onclick="togglePauseTimer()" class="btn-timer btn-start hidden" title="Pause Timer">⏸</button>
+          <button id="stopBtn" onclick="stopTimer()" class="btn-timer btn-stop hidden" title="Stop Timer">■</button>
+          <button id="restoreBtn" onclick="restoreWindow()" class="btn-timer btn-restore"
+            title="Restore Window">⤢</button>
+        </div>
+      </div>
+
+      <!-- Logs Section -->
+      <div class="logs-section">
+        <div class="logs-header">
+          <h2>Time Logs</h2>
+        </div>
+
+        <div class="table-container">
+          <table id="logsTable">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Project</th>
+                <th>Task</th>
+                <th>Username</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <!-- Logs will be dynamically inserted here -->
+            </tbody>
+          </table>
+
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">📂</div>
+            <p style="font-size: 1.125rem; color: #4b5563;">No time logs yet.</p>
+            <p style="font-size: 0.875rem;">Start the timer above to track your first task.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Modal -->
+  <div id="customModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions">
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Tutorial Popover Container -->
+  <div id="tutorialOverlay" class="hidden"></div>
+  <div id="tutorialPopover" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 12px;">
+      <h3 id="tutorialTitle" style="font-size: 0.9375rem; font-weight: 700; color: var(--text-main); margin: 0;">App Guide</h3>
+      <span id="tutorialStepIndicator" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Step 1 of 5</span>
+    </div>
+    <div id="tutorialBody" style="font-size: 0.875rem; color: var(--text-main); min-height: 80px; line-height: 1.5;">
+      <!-- Step content populated dynamically -->
+    </div>
+    <div class="modal-actions" style="justify-content: space-between; border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 12px;">
+      <button class="btn" id="tutorialPrevBtn" onclick="prevTutorialStep()">Back</button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="closeTutorial()" style="background-color: transparent; color: var(--text-muted); border: none;">Skip</button>
+        <button class="btn btn-start" id="tutorialNextBtn" onclick="nextTutorialStep()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/renderer.js"></script>
+</body>
+
+</html>
