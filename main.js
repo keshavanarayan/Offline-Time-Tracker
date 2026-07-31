@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain, dialog, autoUpdater } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { loadEnv } = require('./scripts/env-loader');
+
+loadEnv();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {

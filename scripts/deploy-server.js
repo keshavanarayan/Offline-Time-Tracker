@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { loadEnv } = require('./env-loader');
+
+loadEnv();
 
 const serverTargetBaseDir = process.env.DEPLOY_SERVER_PATH;
 const rootDir = path.join(__dirname, '..');
