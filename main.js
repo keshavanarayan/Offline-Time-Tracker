@@ -9,7 +9,7 @@ if (require('electron-squirrel-startup')) {
 
 // Setup Auto Updater pointing to the LAN shared folder
 if (app.isPackaged) {
-  const updateFolder = process.env.UPDATE_SERVER_PATH;
+  const updateFolder = process.env.DEPLOY_SERVER_PATH;
 
   if (updateFolder) {
     try {
@@ -205,7 +205,7 @@ ipcMain.on('quit-app', () => {
 
 // IPC handler to check if update server is accessible
 ipcMain.handle('check-update-server', async (event, customFolder) => {
-  const updateFolder = customFolder || process.env.UPDATE_SERVER_PATH;
+  const updateFolder = customFolder || process.env.DEPLOY_SERVER_PATH;
   if (!updateFolder) return false;
   try {
     // Check if the directory is reachable and readable
@@ -233,7 +233,7 @@ ipcMain.handle('select-update-folder', async (event) => {
 ipcMain.on('set-update-url', (event, customFolder) => {
   if (app.isPackaged) {
     try {
-      const updateFolder = customFolder || process.env.UPDATE_SERVER_PATH;
+      const updateFolder = customFolder || process.env.DEPLOY_SERVER_PATH;
       if (updateFolder) {
         autoUpdater.setFeedURL({ url: updateFolder });
         console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
