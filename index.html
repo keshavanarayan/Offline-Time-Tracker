@@ -709,6 +709,13 @@
               </svg>
               Set Deadline Time
             </button>
+            <button class="dropdown-item" id="deleteEntryBtn" onclick="clearAllLogs(); toggleAdvancedSettings();" style="color: #f87171;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Delete Entry
+            </button>
             <button class="dropdown-item" id="shutdownBtn" onclick="shutdownApp(); toggleAdvancedSettings();" style="color: #ef4444;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
@@ -785,7 +792,6 @@
                 <th>Start</th>
                 <th>End</th>
                 <th>Duration</th>
-                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="logsTableBody">
@@ -994,9 +1000,17 @@
             return;
           }
 
+          const username = usernameInput.value.trim();
           const client = clientInput.value.trim();
           const project = projectInput.value.trim();
           const task = taskInput.value.trim();
+
+          if (!username) {
+            usernameInput.classList.add("input-error");
+            usernameInput.focus();
+            showCustomAlert("Please enter your Name before minimizing.");
+            return;
+          }
 
           if (!client || !project || !task || !activeSession) {
             showCustomAlert("Please set the Client, Project, Task and start the timer for the app to minimize.");
@@ -1021,9 +1035,17 @@
             return;
           }
 
+          const username = usernameInput.value.trim();
           const client = clientInput.value.trim();
           const project = projectInput.value.trim();
           const task = taskInput.value.trim();
+
+          if (!username) {
+            usernameInput.classList.add("input-error");
+            usernameInput.focus();
+            showCustomAlert("Please enter your Name before minimizing.");
+            return;
+          }
 
           if (!client || !project || !task || !activeSession) {
             showCustomAlert("Please set the Client, Project, Task and start the timer for the app to minimize.");
@@ -1479,6 +1501,17 @@
       const project = projectInput.value.trim();
       const task = taskInput.value.trim();
 
+      const username = usernameInput.value.trim();
+
+      if (!username) {
+        usernameInput.classList.add("input-error");
+        usernameInput.focus();
+        showCustomAlert("Please enter your Name before starting the timer.");
+        return;
+      } else {
+        usernameInput.classList.remove("input-error");
+      }
+
       if (!client) {
         clientInput.classList.add("input-error");
       } else {
@@ -1629,11 +1662,34 @@
       renderLogs();
     }
 
-    function deleteLog(id) {
-      logs = logs.filter((log) => log.id !== id);
-      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-      updateProjectList();
-      renderLogs();
+    function clearAllLogs() {
+      if (logs.length === 0) {
+        showCustomModal("There are no entries to delete.", [
+          { text: "OK", class: "btn-start", value: true }
+        ]);
+        return;
+      }
+
+      showCustomModal(
+        "Are you sure you want to delete time log entries?",
+        [
+          { text: "Cancel", class: "btn", value: false },
+          { text: "Delete All Logs", class: "btn btn-stop", value: "all" },
+          { text: "Delete Most Recent", class: "btn btn-start", value: "latest" }
+        ],
+        (choice) => {
+          if (!choice) return;
+          if (choice === "all") {
+            logs = [];
+          } else if (choice === "latest" && logs.length > 0) {
+            logs.shift();
+          }
+          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+          updateProjectList();
+          updateClientList();
+          renderLogs();
+        }
+      );
     }
 
 
@@ -1733,9 +1789,6 @@
             <input type="time" class="input-field" style="padding: 4px; width: 110px;" value="${endTimeStr}" onchange="updateLogTime('${log.id}', 'endTime', this.value)" title="Edit End Time">
           </td>
           <td class="duration-cell">${formatTime(log.duration)}</td>
-          <td style="text-align: right;">
-              <button onclick="deleteLog('${log.id}')" class="btn-delete" title="Delete record">✖</button>
-          </td>
         `;
         logsTableBody.appendChild(tr);
       });

@@ -8,10 +8,11 @@
 
 - **Studio Hours Aesthetic:** Minimalist black & white architectural design, crisp typography, dark slate top bar, and clean visual hierarchy.
 - **Client-Project Coupling & Dynamic Suggestions:** Project suggestions automatically filter based on the typed/selected Client. Explicit separate creation confirmations for new Clients and new Client-Project combinations.
-- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, **Set Deadline Time**, and **Shutdown**.
+- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, **Set Deadline Time**, **Delete Entry**, and **Shutdown**.
 - **Silent Shutdown Button:** The **Shutdown** button in Advanced Settings saves any active session and exits immediately without popups or prompts.
+- **Mandatory Username Enforcement:** Timer tracking and window minimization require entering a user name; the app automatically directs focus to the name input field if left empty.
 - **Configurable Closing Deadline & 2-Button Title Bar:** 
-  - **`-` (Minimize Button):** Minimizes to floating Mini Mode. Requires Client, Project, Task, AND an active running timer (`▶`).
+  - **`-` (Minimize Button):** Minimizes to floating Mini Mode. Requires Username, Client, Project, Task, AND an active running timer (`▶`).
   - **`X` (Close Button):** Restricts closing before your configured deadline time (configurable via Advanced Settings in 12-hour format; default 6:00 PM). After the deadline, prompts *"Are you going home and is your work complete for today?"* and closes the app on **Yes**.
 - **PC Shutdown & Crash Protection:** 5-second active heartbeat system that automatically finalizes and saves active work sessions if the PC shuts down, sleeps, or loses power.
 - **100% Offline Independence:** Zero external CDN, Google Fonts, or internet API dependencies. Runs completely offline.
