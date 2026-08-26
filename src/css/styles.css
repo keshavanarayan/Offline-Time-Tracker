@@ -109,6 +109,18 @@ body {
   background-color: #0f172a;
 }
 
+#autoExportBtn.warning {
+  border-color: #f59e0b;
+  color: #fef3c7;
+  background-color: #78350f;
+}
+
+#autoExportBtn.error {
+  border-color: #ef4444;
+  color: #fee2e2;
+  background-color: #7f1d1d;
+}
+
 .input-field {
   padding: 8px 12px;
   border: 1px solid var(--border-color);

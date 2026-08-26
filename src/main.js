@@ -277,22 +277,26 @@ ipcMain.handle('select-folder', async (event) => {
   return null;
 });
 
-// IPC handler to save the CSV file automatically
+// IPC handler to save the CSV file automatically and verify completion
 ipcMain.handle('save-csv-auto', async (event, data) => {
   const { folderPath, fileName, csvContent } = data;
-  if (!folderPath || !fileName || !csvContent) {
+  if (!folderPath || !fileName || typeof csvContent !== 'string') {
     console.error('Invalid auto-export data');
-    return false;
+    return { success: false, error: 'Invalid folder path, filename, or content.' };
   }
 
   const fullPath = path.join(folderPath, fileName);
   try {
     fs.writeFileSync(fullPath, csvContent, 'utf8');
+    const stats = fs.statSync(fullPath);
+    if (stats.size === 0 && csvContent.length > 0) {
+      return { success: false, error: 'Export file was created but is empty.' };
+    }
     console.log('Successfully auto-exported CSV to', fullPath);
-    return true;
+    return { success: true, filePath: fullPath };
   } catch (err) {
     console.error('Failed to auto-export CSV:', err);
-    return false;
+    return { success: false, error: err.message || 'Write failed' };
   }
 });
 

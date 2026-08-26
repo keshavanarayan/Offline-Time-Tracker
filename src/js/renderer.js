@@ -48,17 +48,28 @@ let pausedTimeAcc = 0;
 let pauseStartTime = null;
 
 // --- Initialization ---
+function updateAutoExportButtonState() {
+  if (!ipcRenderer || !autoExportBtn) return;
+  const folder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+  autoExportBtn.classList.remove("active", "warning", "error");
+
+  if (folder) {
+    autoExportBtn.classList.add("active");
+    autoExportBtn.innerHTML = `✅ Auto-Export Active`;
+    autoExportBtn.title = `Auto-exporting daily to: ${folder}`;
+  } else {
+    autoExportBtn.classList.add("warning");
+    autoExportBtn.innerHTML = `⚠️ Set Export Folder`;
+    autoExportBtn.title = `Auto-export folder is not configured. Click to set folder.`;
+  }
+}
+
 function init() {
   usernameInput.value = currentUsername;
   updateProjectList();
   updateClientList();
   renderLogs();
-
-  // Check auto-export settings on load
-  if (localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER) && ipcRenderer) {
-    autoExportBtn.classList.add("active");
-    autoExportBtn.innerHTML = `✅ Auto-Export Active`;
-  }
+  updateAutoExportButtonState();
 
   if (ipcRenderer) {
     checkUpdateServerStatus();
@@ -105,7 +116,7 @@ function init() {
       }
     });
 
-    ipcRenderer.on('app-closing', () => {
+    ipcRenderer.on('app-closing', async () => {
       let hasMissingInfo = false;
 
       // Check if any previous log has missing info
@@ -141,12 +152,27 @@ function init() {
         stopTimer();
       }
 
+      // Check auto export folder setting before closing
+      const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+      if (!exportFolder) {
+        showCustomAlert("Please select an Auto-Export folder so your timesheet logs can be saved.");
+        const selected = await setupAutoExport();
+        if (!selected) {
+          return; // Block close until folder is configured
+        }
+      }
+
+      // Force auto-export to save today's complete session data
+      if (logs.length > 0) {
+        await checkAutoExport(true);
+      }
+
       // Tell main process it is safe to quit now
       ipcRenderer.send('quit-app');
     });
 
     // Intercept mini-mode transition
-    ipcRenderer.on('check-can-mini-mode', () => {
+    ipcRenderer.on('check-can-mini-mode', async () => {
       let hasMissingLogInfo = false;
       for (const log of logs) {
         if (!log.client || !log.project || !log.task) {
@@ -175,13 +201,20 @@ function init() {
       if (!client || !project || !task || !activeSession) {
         showCustomAlert("Please set the Client, Project, Task and start the timer for the app to minimize.");
         return;
+      }
+
+      const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+      if (!exportFolder) {
+        showCustomAlert("Please select an Auto-Export folder before minimizing.");
+        const selected = await setupAutoExport();
+        if (!selected) return;
       }
 
       ipcRenderer.send('allow-mini-mode');
     });
 
     // Intercept native window minimize
-    ipcRenderer.on('check-can-minimize', () => {
+    ipcRenderer.on('check-can-minimize', async () => {
       let hasMissingLogInfo = false;
       for (const log of logs) {
         if (!log.client || !log.project || !log.task) {
@@ -210,6 +243,13 @@ function init() {
       if (!client || !project || !task || !activeSession) {
         showCustomAlert("Please set the Client, Project, Task and start the timer for the app to minimize.");
         return;
+      }
+
+      const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+      if (!exportFolder) {
+        showCustomAlert("Please select an Auto-Export folder before minimizing.");
+        const selected = await setupAutoExport();
+        if (!selected) return;
       }
 
       ipcRenderer.send('allow-minimize');
@@ -530,11 +570,20 @@ function closeApp() {
   });
 }
 
-function shutdownApp() {
+async function shutdownApp() {
   if (activeSession) {
     stopTimer();
   }
   if (ipcRenderer) {
+    const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+    if (!exportFolder) {
+      showCustomAlert("Please select an Auto-Export folder so your timesheet logs can be saved.");
+      const selected = await setupAutoExport();
+      if (!selected) return;
+    }
+    if (logs.length > 0) {
+      await checkAutoExport(true);
+    }
     ipcRenderer.send('quit-app');
   }
 }
@@ -646,7 +695,7 @@ function updateDisplay() {
   timerDisplay.textContent = formatTime(Math.max(0, elapsed));
 }
 
-function startTimer() {
+async function startTimer() {
   const client = clientInput.value.trim();
   const project = projectInput.value.trim();
   const task = taskInput.value.trim();
@@ -660,6 +709,12 @@ function startTimer() {
     return;
   } else {
     usernameInput.classList.remove("input-error");
+  }
+
+  if (ipcRenderer && !localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER)) {
+    showCustomAlert("Please select an Auto-Export folder before tracking time.");
+    const selected = await setupAutoExport();
+    if (!selected) return;
   }
 
   if (!client) {
@@ -993,47 +1048,73 @@ function getCSVContent(logsToExport = logs) {
 }
 
 async function setupAutoExport() {
-  if (!ipcRenderer) return;
+  if (!ipcRenderer) return false;
 
   const folderPath = await ipcRenderer.invoke("select-folder");
 
   if (folderPath) {
     localStorage.setItem(STORAGE_KEY_EXPORT_FOLDER, folderPath);
-    autoExportBtn.classList.add("active");
-    autoExportBtn.innerHTML = `✅ Auto-Export Active`;
+    updateAutoExportButtonState();
+    // Run an export check immediately once folder is set
+    await checkAutoExport();
+    return true;
   }
+  return false;
 }
 
-async function checkAutoExport() {
+async function checkAutoExport(force = false) {
   const exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
-  if (!exportFolder || logs.length === 0) return;
+  if (!exportFolder || logs.length === 0) {
+    updateAutoExportButtonState();
+    return false;
+  }
 
   const now = new Date();
+  const todayDateStr = now.toISOString().split("T")[0];
+  const lastExportDate = localStorage.getItem(STORAGE_KEY_LAST_EXPORT);
 
-  if (now.getHours() >= 18) {
-    const todayDateStr = now.toISOString().split("T")[0];
-    const lastExportDate = localStorage.getItem(STORAGE_KEY_LAST_EXPORT);
+  if (force || now.getHours() >= 18 || lastExportDate !== todayDateStr) {
+    saveUsername();
+    const csvContent = getCSVContent(logs);
 
-    if (lastExportDate !== todayDateStr) {
-      saveUsername();
-      const csvContent = getCSVContent(logs);
+    const namePrefix = currentUsername
+      ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
+      : "";
+    const fileName = `Daily_Timesheet_${namePrefix}${todayDateStr}.csv`;
 
-      const namePrefix = currentUsername
-        ? `${currentUsername.replace(/[^a-z0-9]/gi, "_")}_`
-        : "";
-      const fileName = `Daily_Timesheet_${namePrefix}${todayDateStr}.csv`;
-
-      const success = await window.electronAPI.invoke("save-csv-auto", {
+    try {
+      const res = await window.electronAPI.invoke("save-csv-auto", {
         folderPath: exportFolder,
         fileName,
         csvContent,
       });
 
-      if (success !== false) {
+      if (res && res.success) {
         localStorage.setItem(STORAGE_KEY_LAST_EXPORT, todayDateStr);
+        updateAutoExportButtonState();
+        return true;
+      } else {
+        console.error("Auto-export failed:", res ? res.error : "Unknown error");
+        if (autoExportBtn) {
+          autoExportBtn.classList.remove("active", "warning");
+          autoExportBtn.classList.add("error");
+          autoExportBtn.innerHTML = `❌ Auto-Export Failed`;
+          autoExportBtn.title = `Export failed: ${res && res.error ? res.error : 'Cannot write to export folder'}. Click to re-select folder.`;
+        }
+        return false;
       }
+    } catch (err) {
+      console.error("Auto-export invocation error:", err);
+      if (autoExportBtn) {
+        autoExportBtn.classList.remove("active", "warning");
+        autoExportBtn.classList.add("error");
+        autoExportBtn.innerHTML = `❌ Auto-Export Failed`;
+        autoExportBtn.title = `Error: ${err.message || err}. Click to re-select folder.`;
+      }
+      return false;
     }
   }
+  return true;
 }
 
 function exportCSV() {
