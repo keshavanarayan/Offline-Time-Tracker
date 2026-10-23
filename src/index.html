@@ -21,20 +21,20 @@
 
     <!-- Header -->
     <div class="header">
-      <h1>Time Tracker <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">by </span><a
-          href="http://spaciotechtonics.info" style="font-size: 1rem; font-weight: 500; color: var(--text-muted);"
+      <h1>Time Tracker <span class="header-by">by </span><a
+          href="http://spaciotechtonics.info" class="header-author-link"
           target="_blank">Spacio
           Techtonics</a></h1>
 
       <div class="header-actions">
-        <div id="autoUpdateStatusBtn" class="status-btn hidden" onclick="setupAutoUpdate()" style="cursor: pointer;" title="Click to change update folder location">
+        <div id="autoUpdateStatusBtn" class="status-btn hidden cursor-pointer" onclick="setupAutoUpdate()" title="Click to change update folder location">
           Checking Updates...
         </div>
         <button id="autoExportBtn" onclick="setupAutoExport()" class="btn" title="Set folder for automatic weekly exports">
           Auto-Export
         </button>
-        <input type="text" id="usernameInput" class="input-field" onchange="saveUsername()" placeholder="Your Name"
-          title="Enter your name" style="background-color: #1e293b; color: #ffffff; border-color: #334155;" />
+        <input type="text" id="usernameInput" class="input-field header-username-input" onchange="saveUsername()" placeholder="Your Name"
+          title="Enter your name" />
         
         <!-- Advanced Settings Dropdown -->
         <div class="dropdown" id="advancedSettingsDropdown">
@@ -75,14 +75,21 @@
               </svg>
               Set Deadline Time
             </button>
-            <button class="dropdown-item" id="deleteEntryBtn" onclick="clearAllLogs(); toggleAdvancedSettings();" style="color: #f87171;">
+            <button class="dropdown-item" id="resetExportFolderBtn" onclick="resetExportFolderToDefault(); toggleAdvancedSettings();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Reset Export Folder to Server Default
+            </button>
+            <button class="dropdown-item dropdown-item-warning" id="deleteEntryBtn" onclick="clearAllLogs(); toggleAdvancedSettings();">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
               Delete Entry
             </button>
-            <button class="dropdown-item" id="shutdownBtn" onclick="shutdownApp(); toggleAdvancedSettings();" style="color: #ef4444;">
+            <button class="dropdown-item dropdown-item-danger" id="shutdownBtn" onclick="shutdownApp(); toggleAdvancedSettings();">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                 <line x1="12" y1="2" x2="12" y2="12"></line>
@@ -185,22 +192,26 @@
   <!-- Interactive Tutorial Popover Container -->
   <div id="tutorialOverlay" class="hidden"></div>
   <div id="tutorialPopover" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 12px;">
-      <h3 id="tutorialTitle" style="font-size: 0.9375rem; font-weight: 700; color: var(--text-main); margin: 0;">App Guide</h3>
-      <span id="tutorialStepIndicator" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Step 1 of 5</span>
+    <div class="tutorial-header">
+      <h3 id="tutorialTitle" class="tutorial-title">App Guide</h3>
+      <span id="tutorialStepIndicator" class="tutorial-step-indicator">Step 1 of 5</span>
     </div>
-    <div id="tutorialBody" style="font-size: 0.875rem; color: var(--text-main); min-height: 80px; line-height: 1.5;">
+    <div id="tutorialBody" class="tutorial-body">
       <!-- Step content populated dynamically -->
     </div>
-    <div class="modal-actions" style="justify-content: space-between; border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 12px;">
+    <div class="modal-actions tutorial-actions">
       <button class="btn" id="tutorialPrevBtn" onclick="prevTutorialStep()">Back</button>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn" onclick="closeTutorial()" style="background-color: transparent; color: var(--text-muted); border: none;">Skip</button>
+      <div class="tutorial-btn-group">
+        <button class="btn tutorial-skip-btn" onclick="closeTutorial()">Skip</button>
         <button class="btn btn-start" id="tutorialNextBtn" onclick="nextTutorialStep()">Next</button>
       </div>
     </div>
   </div>
 
+  <script src="js/state.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/modal.js"></script>
   <script src="js/renderer.js"></script>
 </body>
 

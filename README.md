@@ -1,106 +1,176 @@
 # Offline-Time-Tracker
 
-**Offline-Time-Tracker** is a standalone, 100% offline desktop application built with Electron for tracking work hours, client projects, and task logs without requiring any internet connection or cloud service.
+**Offline-Time-Tracker** is a standalone desktop application for tracking work hours, client projects, and task logs. The application runs completely offline without external cloud dependencies or internet access.
+
+---
+
+## Architecture and Design Decisions
+
+The application uses an Electron multi-process architecture designed for stability, security, and offline resilience:
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Electron Main Process                │
+│ (src/main.js, scripts/env-loader.js)                   │
+│ - Window Lifecycle & Single Instance Control           │
+│ - Power Monitor (Heartbeat, Sleep & Shutdown Events)   │
+│ - Atomic File System Operations & Local Disk Backups   │
+│ - LAN Network Sync & Auto-Updater Server Configuration │
+└──────────────────────────┬─────────────────────────────┘
+                           │ IPC Bridge (src/preload.js)
+┌──────────────────────────┴─────────────────────────────┐
+│                 Chromium Renderer Process              │
+│ (src/index.html, src/js/renderer.js, src/css/styles.css)│
+│ - Live Timer State Machine & Keyboard Shortcuts        │
+│ - Client-Project Coupling & Dynamic Input Suggestions   │
+│ - Local Date Calculations & Change Detection Flag      │
+│ - Floating Mini-Mode Widget & Onboarding Tutorial      │
+└────────────────────────────────────────────────────────┘
+```
+
+### Key Design Decisions
+
+1. **Two-Tier File Persistence:**
+   - The application saves logs in browser `localStorage`.
+   - On every session stop, the main process writes a backup file to `%APPDATA%\offline-time-tracker\AutoExports\`.
+   - The application then writes to the designated LAN network folder.
+   - If the network disconnects, the local backup protects against data loss.
+
+2. **Atomic Network File Operations:**
+   - Over network drives (LAN/SMB), the application writes to a temporary file (`.tmp`) first.
+   - The application verifies file size before replacing the destination file.
+   - This design prevents file truncation or corruption if network connectivity drops.
+
+3. **Collision-Proof Multi-PC File Naming:**
+   - Timesheet filenames combine the user name, machine hostname, and local calendar date:
+     ```text
+     Daily_Timesheet_<Username>_<ComputerName>_<YYYY-MM-DD>.csv
+     ```
+   - Multiple computers can export to the same shared folder without file collisions.
+
+4. **Offline Synchronization:**
+   - When a computer reconnects to the office network, the main process automatically copies any pending local backup files to the shared folder.
+
+5. **Power Drop and Crash Protection:**
+   - A 5-second active heartbeat monitors timer sessions.
+   - If a computer shuts down abruptly, the application recovers the session on the next launch and saves the elapsed time.
 
 ---
 
 ## Key Features
 
-- **Studio Hours Aesthetic:** Minimalist black & white architectural design, crisp typography, dark slate top bar, and clean visual hierarchy.
-- **Client-Project Coupling & Dynamic Suggestions:** Project suggestions automatically filter based on the typed/selected Client. Explicit separate creation confirmations for new Clients and new Client-Project combinations.
-- **Advanced Settings Dropdown:** Clean gear icon dropdown (`⚙ Advanced Settings ▾`) grouping **Check Updates**, **Tutorial**, **Export CSV**, **Set Deadline Time**, **Delete Entry**, and **Shutdown**.
-- **Silent Shutdown Button:** The **Shutdown** button in Advanced Settings saves any active session and exits immediately without popups or prompts.
-- **Mandatory Username Enforcement:** Timer tracking and window minimization require entering a user name; the app automatically directs focus to the name input field if left empty.
-- **Configurable Closing Deadline & 2-Button Title Bar:** 
-  - **`-` (Minimize Button):** Minimizes to floating Mini Mode. Requires Username, Client, Project, Task, AND an active running timer (`▶`).
-  - **`X` (Close Button):** Restricts closing before your configured deadline time (configurable via Advanced Settings in 12-hour format; default 6:00 PM). After the deadline, prompts *"Are you going home and is your work complete for today?"* and closes the app on **Yes**.
-- **PC Shutdown & Crash Protection:** 5-second active heartbeat system that automatically finalizes and saves active work sessions if the PC shuts down, sleeps, or loses power.
-- **100% Offline Independence:** Zero external CDN, Google Fonts, or internet API dependencies. Runs completely offline.
-- **Interactive Onboarding Spotlight Tour:** Element-targeted guided walkthrough highlighting key app controls on first launch or via `Advanced Settings → Tutorial`.
-- **Full Screen Startup & Window Rules:** Intentionally launches in full screen on startup to prompt logging.
-- **Pause & Resume Tracking:** Start (`▶`), Pause (`⏸`), Resume (`▶`), and Stop (`■`) active timing sessions cleanly.
-- **Compact Floating Mini Window:** Resizable mini window widget (`260px × 56px` base) that stays on top during work. Automatically expands back to full window when stopping a session.
-- **Auto-Export to CSV:** Daily automatic export of timesheets at 6:00 PM to a user-designated **local folder** or **shared LAN network drive**.
-- **Update Server Folder Integration:** Easily configure a custom local folder or LAN share for auto-updates. Features a visual status badge and manual **Check Updates** trigger.
-- **Run on Startup:** Automatically configures itself to launch when Windows starts up.
-- **Support & Donations:** Integrated Razorpay payment link support directly via the `Donate` button.
+- **Client and Project Coupling:** Project suggestions filter automatically based on the selected client.
+- **Mandatory User Identification:** Prompts for a user name or defaults to the Windows login name.
+- **Configurable Workday Deadline:** Restricts closing before your daily deadline (default 6:00 PM).
+- **Floating Mini-Mode:** Compact widget (`260px × 56px`) stays on top of full-screen software during design work.
+- **Collision-Proof Auto-Export:** Automatically exports daily CSV timesheets to a local or LAN folder.
+- **Interactive Tutorial Tour:** Guided walkthrough introduces controls on first launch.
+- **Keyboard Shortcuts:**
+  - `Ctrl + Alt + S`: Start or Pause timer.
+  - `Ctrl + Alt + M`: Toggle Mini-Mode.
 
 ---
 
-## Development & Building
+## Setup and Configuration
 
-### 1. Run in Development Mode
-`npm start` launches the app for live testing.  
-> **Note:** `npm start` does **NOT** build or generate installer packages.
+### Environment Configuration
+
+Configure environment variables in a `.env` file in the root folder. Use `.env.example` as a template:
 
 ```bash
+cp .env.example .env
+```
+
+Set your values in `.env`:
+
+```env
+# LAN Server deployment folder for application auto-updates
+DEPLOY_SERVER_PATH=\\YOUR_SERVER\path\Offline-Time-Tracker-dist
+
+# Default shared folder for automated daily timesheets
+DEFAULT_EXPORT_FOLDER=\\YOUR_SERVER\path\TimeLog
+```
+
+> **Note:** The `.env` file is excluded from Git to keep private network addresses secure.
+
+---
+
+## How to Use the Application
+
+1. **Launch the Application:**
+   - On startup, the application opens in full-screen mode.
+   - Enter your name in the **Your Name** field if not filled automatically.
+
+2. **Track a Task:**
+   - Select or enter a **Client Name**.
+   - Select or enter a **Project Name**.
+   - Select the **Task** type from the dropdown.
+   - Click the **Start** (`▶`) button or press `Ctrl + Alt + S`.
+
+3. **Use Mini Mode:**
+   - Click the minimize (`-`) button or press `Ctrl + Alt + M`.
+   - The application shrinks to a floating widget on your screen.
+   - Click the restore (`⤢`) button or stop the timer to return to full window.
+
+4. **Auto-Export Timesheets:**
+   - The application reads the default export folder from `.env`.
+   - To select a custom folder, click the **Auto-Export** button on the top bar.
+   - Timesheets export automatically when you stop sessions, edit entries, or close the app.
+   - To reset back to the environment folder, open **Advanced Settings ▾** and click **Reset Export Folder to Server Default**.
+
+5. **End Your Workday:**
+   - Click the close button (`X`) after your closing deadline.
+   - Confirm the prompt to stop any active session, export today's CSV, and close the application.
+   - Alternatively, use the **Shutdown** option in **Advanced Settings ▾** to save and exit immediately.
+
+---
+
+## Development and Building Scripts
+
+### 1. Install Dependencies
+```powershell
+npm install
+```
+
+### 2. Run in Development Mode
+```powershell
 npm start
 ```
+Starts the application locally with live developer logging.
 
-### 2. Build Windows Executable Installers (`.exe`)
-To package and generate distribution files locally, run:
-
-```bash
+### 3. Build Windows Distribution Installers
+```powershell
 npm run make
 ```
+Generates production Squirrel installers and binaries in the `Offline-Time-Tracker-dist/` folder:
+- `Offline-Time-Tracker-<version> Setup.exe` (Standalone Installer)
+- `Offline_Time_Tracker-<version>-full.nupkg` (Update Package)
+- `RELEASES` (Release Manifest)
 
-`forge.config.js` packages all generated binaries directly into:
-- 📁 **Distribution Folder:** `Offline-Time-Tracker-dist/` (Contains `Setup.exe`, `.nupkg`, and `RELEASES`)
-
-### 3. Verify Deployment & Environment Readiness
-Run the environment pre-check script to verify build artifacts and LAN share accessibility:
-
-```bash
+### 4. Verify LAN Readiness
+```powershell
 npm run check-env
 ```
+Validates the build artifacts and confirms that the update server path is accessible.
 
-### 4. Deploy to LAN Server
-To deploy release packages to a configured shared network folder, run:
-
-```bash
+### 5. Deploy to LAN Server
+```powershell
 npm run deploy
 ```
+Copies release files from `Offline-Time-Tracker-dist/` to the configured `DEPLOY_SERVER_PATH`.
 
----
-
-## Release Process
-
-Automated tag creation, changelog generation, and GitHub release binary compilation via GitHub Actions:
-
-```bash
+### 6. Publish Release Tag
+```powershell
 npm run publish
 ```
-
-This interactive command updates `package.json`, generates a changelog in `README.md`, creates and pushes a version tag (e.g. `v2.0.1`), and triggers GitHub Actions to build and attach the `.exe`, `.nupkg`, and `RELEASES` assets to GitHub Releases.
+Creates a new version tag and triggers the GitHub release build workflow.
 
 ---
 
 ## License
+
 [CC BY-NC-SA 4.0](LICENSE) (Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International)
 
 Copyright (c) 2026 Keshava Narayan / Spacio Techtonics.  
-- **Free for Personal & Non-Commercial Use**  
-- **Commercial distribution or sale is strictly prohibited without permission.**
-
-
-## Changelog
-
-### v2.0.1 (2026-07-31)
-- refactor: change auto-export frequency to one minute and transition to daily CSV exports at 6 PM (4337f85)
-- docs: update README.md with npm run publish and check-env workflow documentation (1ef38d9)
-- feat: add zero-dependency env loader, check-env deployment readiness tool, and update release workflow (cc62588)
-- refactor: consolidate server path configuration to single DEPLOY_SERVER_PATH variable (3a98e4e)
-- refactor: flatten distribution artifacts into single Offline-Time-Tracker-dist folder (e055215)
-- chore: add .env.example template and remove sensitive build log (2bac950)
-- feat: add deployment script and parameterize update server path via environment variables (eae40bf)
-- feat: implement configurable closing deadlines, silent shutdown, and automated deployment script for LAN servers (9a38af1)
-- feat: add configurable daily deadline setting and minimize to mini mode functionality (d95956a)
-- feat: add script to organize and copy build artifacts into distribution folders (681a903)
-- feat: add script to automate organization of release artifacts into deployment folders (133d881)
-- chore: add build and distribution files to electron-forge ignore list (fcd62d6)
-- feat: add mandatory shutdown constraints, improved client-project validation, and updated UI controls (8145f5c)
-- feat: add advanced settings dropdown with manual update check and build artifact distribution script (897457e)
-- feat: add shutdown button and implement heartbeat-based auto-stop for crashed or aborted sessions (ed0f917)
-- style: redesign UI with modern Slate color palette and improved typography (eda4136)
-- feat: rebrand application title and header to Time Tracker by Spacio Techtonics (4e2daeb)
-- feat: Implement auto-update functionality with configurable LAN shared folder source and status display. (82b8535)
+- Free for Personal and Non-Commercial Use.  
+- Commercial distribution or sale requires explicit permission.

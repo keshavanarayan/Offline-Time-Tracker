@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, autoUpdater, powerMonitor } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const { loadEnv } = require('../scripts/env-loader');
 
 loadEnv();
@@ -8,6 +9,19 @@ loadEnv();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
+}
+
+// Ensure single application instance
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
 }
 
 // Setup Auto Updater pointing to the LAN shared folder
@@ -115,7 +129,7 @@ app.whenReady().then(() => {
     });
     powerMonitor.on('lock-screen', () => {
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('app-closing');
+        mainWindow.webContents.send('screen-locked');
       }
     });
   }
@@ -264,6 +278,23 @@ ipcMain.on('trigger-update-check', () => {
   }
 });
 
+// IPC handler to provide machine hostname, Windows user, and environment default export folder
+ipcMain.handle('get-system-info', () => {
+  let osUsername = '';
+  try {
+    const userInfo = os.userInfo();
+    osUsername = userInfo ? userInfo.username : '';
+  } catch (err) {
+    console.warn('Could not read os.userInfo:', err.message);
+  }
+
+  return {
+    hostname: os.hostname() || '',
+    osUsername: osUsername || '',
+    defaultExportFolder: process.env.DEFAULT_EXPORT_FOLDER || ''
+  };
+});
+
 // IPC handler to open a folder selection dialog
 ipcMain.handle('select-folder', async (event) => {
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -277,26 +308,103 @@ ipcMain.handle('select-folder', async (event) => {
   return null;
 });
 
+async function syncLocalBackupsToNetwork(folderPath, localBackupDir) {
+  try {
+    const localFiles = await fs.promises.readdir(localBackupDir);
+    for (const file of localFiles) {
+      if (file.endsWith('.csv')) {
+        const localFilePath = path.join(localBackupDir, file);
+        const networkFilePath = path.join(folderPath, file);
+        try {
+          const networkStats = await fs.promises.stat(networkFilePath).catch(() => null);
+          const localStats = await fs.promises.stat(localFilePath);
+          if (!networkStats || (localStats.mtimeMs > networkStats.mtimeMs && localStats.size > 0)) {
+            const tempNetwork = path.join(folderPath, `${file}.${Date.now()}.tmp`);
+            await fs.promises.copyFile(localFilePath, tempNetwork);
+            try {
+              await fs.promises.rename(tempNetwork, networkFilePath);
+            } catch {
+              await fs.promises.copyFile(tempNetwork, networkFilePath);
+              await fs.promises.unlink(tempNetwork).catch(() => {});
+            }
+            console.log('Synced local backup to network share:', file);
+          }
+        } catch (copyErr) {
+          console.warn(`Could not sync ${file} to network:`, copyErr.message);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Sync local backups failed:', err.message);
+  }
+}
+
 // IPC handler to save the CSV file automatically and verify completion
 ipcMain.handle('save-csv-auto', async (event, data) => {
   const { folderPath, fileName, csvContent } = data;
-  if (!folderPath || !fileName || typeof csvContent !== 'string') {
+  if (!fileName || typeof csvContent !== 'string') {
     console.error('Invalid auto-export data');
-    return { success: false, error: 'Invalid folder path, filename, or content.' };
+    return { success: false, error: 'Invalid filename or content.' };
   }
 
-  const fullPath = path.join(folderPath, fileName);
+  // 1. Always save a local mirror backup in user data
+  let localBackupPath = null;
+  const localBackupDir = path.join(app.getPath('userData'), 'AutoExports');
   try {
-    fs.writeFileSync(fullPath, csvContent, 'utf8');
-    const stats = fs.statSync(fullPath);
-    if (stats.size === 0 && csvContent.length > 0) {
-      return { success: false, error: 'Export file was created but is empty.' };
+    await fs.promises.mkdir(localBackupDir, { recursive: true });
+    localBackupPath = path.join(localBackupDir, fileName);
+    const localTemp = path.join(localBackupDir, `${fileName}.${Date.now()}.tmp`);
+    await fs.promises.writeFile(localTemp, csvContent, 'utf8');
+    try {
+      await fs.promises.rename(localTemp, localBackupPath);
+    } catch {
+      await fs.promises.copyFile(localTemp, localBackupPath);
+      await fs.promises.unlink(localTemp).catch(() => {});
     }
+  } catch (localErr) {
+    console.error('Failed to write local backup export:', localErr);
+  }
+
+  // 2. If no target folder configured, report error
+  if (!folderPath) {
+    return { success: false, error: 'Export folder path not specified.', localBackupPath };
+  }
+
+  // 3. Asynchronously write to target folder with atomic rename/replace
+  const fullPath = path.join(folderPath, fileName);
+  const tempPath = path.join(folderPath, `${fileName}.${Date.now()}.tmp`);
+
+  try {
+    await fs.promises.writeFile(tempPath, csvContent, 'utf8');
+    const stats = await fs.promises.stat(tempPath);
+    if (stats.size === 0 && csvContent.length > 0) {
+      await fs.promises.unlink(tempPath).catch(() => {});
+      return { success: false, error: 'Export file was created but is empty.', localBackupPath };
+    }
+
+    try {
+      await fs.promises.rename(tempPath, fullPath);
+    } catch (renameErr) {
+      // Windows SMB network shares can fail rename if fullPath exists
+      await fs.promises.copyFile(tempPath, fullPath);
+      await fs.promises.unlink(tempPath).catch(() => {});
+    }
+
     console.log('Successfully auto-exported CSV to', fullPath);
-    return { success: true, filePath: fullPath };
+
+    // Sync any pending offline exports in background
+    syncLocalBackupsToNetwork(folderPath, localBackupDir).catch(() => {});
+
+    return { success: true, filePath: fullPath, localBackupPath };
   } catch (err) {
-    console.error('Failed to auto-export CSV:', err);
-    return { success: false, error: err.message || 'Write failed' };
+    console.error('Failed to auto-export CSV to target folder:', err);
+    await fs.promises.unlink(tempPath).catch(() => {});
+    return {
+      success: false,
+      networkError: true,
+      error: err.message || 'Write failed',
+      localBackupPath
+    };
   }
 });
 
