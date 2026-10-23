@@ -295,6 +295,43 @@ ipcMain.handle('get-system-info', () => {
   };
 });
 
+// IPC handlers to persist and restore database snapshots on disk
+ipcMain.handle('save-logs-snapshot', async (event, logsData) => {
+  try {
+    const backupPath = path.join(app.getPath('userData'), 'logs_backup.json');
+    const tempPath = path.join(app.getPath('userData'), `logs_backup.${Date.now()}.tmp`);
+    const content = typeof logsData === 'string' ? logsData : JSON.stringify(logsData, null, 2);
+    await fs.promises.writeFile(tempPath, content, 'utf8');
+    try {
+      await fs.promises.rename(tempPath, backupPath);
+    } catch {
+      await fs.promises.copyFile(tempPath, backupPath);
+      await fs.promises.unlink(tempPath).catch(() => {});
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to save logs snapshot to disk:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('load-logs-snapshot', async () => {
+  try {
+    const backupPath = path.join(app.getPath('userData'), 'logs_backup.json');
+    if (fs.existsSync(backupPath)) {
+      const content = await fs.promises.readFile(backupPath, 'utf8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error('Failed to load logs snapshot from disk:', err.message);
+    return null;
+  }
+});
+
 // IPC handler to open a folder selection dialog
 ipcMain.handle('select-folder', async (event) => {
   const result = await dialog.showOpenDialog(mainWindow, {

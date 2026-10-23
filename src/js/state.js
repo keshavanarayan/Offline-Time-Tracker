@@ -37,6 +37,11 @@ if (window.electronAPI) {
 // --- Persistence Helpers ---
 function saveLogs() {
   localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+  if (ipcRenderer) {
+    ipcRenderer.invoke('save-logs-snapshot', logs).catch((err) => {
+      console.warn("Disk snapshot backup failed:", err);
+    });
+  }
 }
 
 function saveActiveSession() {

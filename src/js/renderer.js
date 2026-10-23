@@ -289,6 +289,23 @@ async function init() {
 
   if (ipcRenderer) {
     try {
+      // 1. Recover logs from disk snapshot if localStorage was cleared
+      if (logs.length === 0) {
+        const snapshot = await ipcRenderer.invoke('load-logs-snapshot');
+        if (snapshot && Array.isArray(snapshot) && snapshot.length > 0) {
+          logs = snapshot;
+          saveLogs();
+          updateProjectList();
+          updateClientList();
+          renderLogs();
+          console.log(`Restored ${logs.length} logs from disk snapshot.`);
+        }
+      } else {
+        // Ensure initial disk snapshot is current
+        saveLogs();
+      }
+
+      // 2. Load system info and default export configuration
       const info = await ipcRenderer.invoke('get-system-info');
       if (info) {
         systemInfo = info;
@@ -303,7 +320,7 @@ async function init() {
         }
       }
     } catch (e) {
-      console.warn("Failed to get system info:", e);
+      console.warn("Failed to get system info or restore snapshot:", e);
     }
 
     updateAutoExportButtonState();

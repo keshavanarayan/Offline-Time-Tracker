@@ -19,7 +19,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   invoke: (channel, data) => {
-    let validChannels = ['select-folder', 'save-csv-auto', 'check-update-server', 'select-update-folder', 'get-system-info'];
+    let validChannels = [
+      'select-folder',
+      'save-csv-auto',
+      'check-update-server',
+      'select-update-folder',
+      'get-system-info',
+      'save-logs-snapshot',
+      'load-logs-snapshot'
+    ];
     if (validChannels.includes(channel)) {
       return ipcRenderer.invoke(channel, data);
     }
