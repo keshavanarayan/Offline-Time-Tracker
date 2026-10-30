@@ -233,7 +233,10 @@ window.onclick = function (event) {
 
 function manualCheckForUpdates() {
   if (ipcRenderer) {
-    ipcRenderer.send('trigger-update-check');
+    ipcRenderer.send(
+      'trigger-update-check',
+      localStorage.getItem(STORAGE_KEY_UPDATE_FOLDER),
+    );
   }
 }
 
@@ -253,7 +256,7 @@ async function checkUpdateServerStatus() {
   } else {
     statusBtn.classList.add('error');
     statusBtn.innerHTML = `🔴 Server Offline`;
-    statusBtn.title = `Cannot reach update folder: ${savedFolder || 'LAN Server'}. Click to configure.`;
+    statusBtn.title = `Cannot reach the update folder or read its RELEASES file: ${savedFolder || 'LAN Server'}. Click to configure.`;
   }
 }
 
@@ -265,7 +268,7 @@ async function setupAutoUpdate() {
     localStorage.setItem(STORAGE_KEY_UPDATE_FOLDER, selectedPath);
     showCustomAlert(`Update folder location set to:\n${selectedPath}`);
     checkUpdateServerStatus();
-    ipcRenderer.send('set-update-url', selectedPath);
+    ipcRenderer.send('trigger-update-check', selectedPath);
   }
 }
 
@@ -327,6 +330,7 @@ async function init() {
     checkUpdateServerStatus();
     checkAutoExport();
     setInterval(checkAutoExport, 60 * 1000);
+    manualCheckForUpdates();
   } else if (autoExportBtn) {
     autoExportBtn.style.display = "none";
   }

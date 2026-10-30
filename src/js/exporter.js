@@ -188,7 +188,10 @@ async function checkAutoExport(force = false) {
       return true;
     } else if (res && res.networkError) {
       isExportDirty = true;
-      updateAutoExportButtonState("network-offline", `Network folder offline: ${res.error}. Timesheet backed up locally.`);
+      const backupMessage = res.localBackupPath
+        ? "Timesheet backed up locally."
+        : `Local backup also failed: ${res.localBackupError || "backup location unavailable."}`;
+      updateAutoExportButtonState("network-offline", `Network folder offline: ${res.error}. ${backupMessage}`);
       return false;
     } else {
       console.error("Auto-export failed:", res ? res.error : "Unknown error");
@@ -202,7 +205,7 @@ async function checkAutoExport(force = false) {
   }
 }
 
-function exportCSV() {
+async function exportCSV() {
   const btn = document.getElementById("exportBtn");
   if (logs.length === 0) {
     if (btn) {
@@ -218,27 +221,63 @@ function exportCSV() {
   }
 
   saveUsername();
-
   const csvContent = getCSVContent();
-  const blob = new Blob([csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
 
   const startDateStr = getLocalDateString(logs[logs.length - 1].startTime);
   const endDateStr = getLocalDateString(logs[0].startTime);
-
   const fileTag = getUniqueFileTag();
-  link.setAttribute(
-    "download",
-    `Timesheet_${fileTag}_${startDateStr}_to_${endDateStr}.csv`,
-  );
-  link.style.visibility = "hidden";
+  const fileName = `Timesheet_${fileTag}_${startDateStr}_to_${endDateStr}.csv`;
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  if (!ipcRenderer) {
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  let exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+  if (!exportFolder) {
+    const selected = await setupAutoExport();
+    if (!selected) return;
+    exportFolder = localStorage.getItem(STORAGE_KEY_EXPORT_FOLDER);
+  }
+
+  try {
+    const result = await ipcRenderer.invoke("save-csv-auto", {
+      folderPath: exportFolder,
+      fileName,
+      csvContent,
+    });
+
+    if (result && result.success) {
+      updateAutoExportButtonState("active");
+      showCustomAlert(`Timesheet exported to:\n${result.filePath}`);
+    } else if (result && result.networkError) {
+      const backupMessage = result.localBackupPath
+        ? `A local backup was saved at:\n${result.localBackupPath}`
+        : `The local backup also failed: ${result.localBackupError || "backup location unavailable."}`;
+      updateAutoExportButtonState(
+        "network-offline",
+        `Network folder offline: ${result.error}. ${backupMessage}`,
+      );
+      showCustomAlert(
+        `The network export failed: ${result.error}\n${backupMessage}`,
+      );
+    } else {
+      const error = result && result.error ? result.error : "Unknown export error.";
+      updateAutoExportButtonState("error", error);
+      showCustomAlert(`Timesheet export failed: ${error}`);
+    }
+  } catch (error) {
+    console.error("Manual CSV export failed:", error);
+    updateAutoExportButtonState("error", error.message || error);
+    showCustomAlert(`Timesheet export failed: ${error.message || error}`);
+  }
 }

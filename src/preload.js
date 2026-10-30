@@ -11,7 +11,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'allow-minimize',
       'quit-app',
       'open-url',
-      'set-update-url',
       'trigger-update-check'
     ];
     if (validChannels.includes(channel)) {

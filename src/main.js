@@ -31,28 +31,28 @@ if (app.isPackaged) {
   if (updateFolder) {
     try {
       autoUpdater.setFeedURL({ url: updateFolder });
-
-      autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-        const dialogOpts = {
-          type: 'info',
-          buttons: ['Restart', 'Later'],
-          title: 'Application Update',
-          message: process.platform === 'win32' ? releaseNotes : releaseName,
-          detail: 'A new version has been downloaded. Restart the application to apply the updates.'
-        };
-
-        dialog.showMessageBox(dialogOpts).then((returnValue) => {
-          if (returnValue.response === 0) autoUpdater.quitAndInstall();
-        });
-      });
-
-      autoUpdater.on('error', message => {
-        console.error('There was a problem updating the application:', message);
-      });
     } catch (err) {
-      console.error('AutoUpdater setup failed:', err);
+      console.error('AutoUpdater feed setup failed:', err);
     }
   }
+
+  autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['Restart', 'Later'],
+      title: 'Application Update',
+      message: process.platform === 'win32' ? releaseNotes : releaseName,
+      detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+    };
+
+    dialog.showMessageBox(dialogOpts).then((returnValue) => {
+      if (returnValue.response === 0) autoUpdater.quitAndInstall();
+    });
+  });
+
+  autoUpdater.on('error', message => {
+    console.error('There was a problem updating the application:', message);
+  });
 }
 
 let mainWindow;
@@ -138,16 +138,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
-  // Check for updates shortly after startup
-  if (app.isPackaged) {
-    setTimeout(() => {
-      try {
-        autoUpdater.checkForUpdates();
-      } catch (err) {
-        console.error('Update check failed:', err);
-      }
-    }, 5000);
-  }
 });
 
 app.on('session-end', () => {
@@ -232,6 +222,7 @@ ipcMain.handle('check-update-server', async (event, customFolder) => {
   if (!updateFolder) return false;
   try {
     await fs.promises.access(updateFolder, fs.constants.R_OK);
+    await fs.promises.access(path.join(updateFolder, 'RELEASES'), fs.constants.R_OK);
     return true;
   } catch (err) {
     return false;
@@ -251,26 +242,15 @@ ipcMain.handle('select-update-folder', async (event) => {
   return null;
 });
 
-// Update the autoUpdater URL dynamically if changed by user
-ipcMain.on('set-update-url', (event, customFolder) => {
+// IPC handler to manually trigger update check from UI
+ipcMain.on('trigger-update-check', (event, customFolder) => {
   if (app.isPackaged) {
     try {
       const updateFolder = customFolder || process.env.DEPLOY_SERVER_PATH;
       if (updateFolder) {
         autoUpdater.setFeedURL({ url: updateFolder });
         console.log(`AutoUpdater Feed URL updated to: ${updateFolder}`);
-        autoUpdater.checkForUpdates();
       }
-    } catch (err) {
-      console.error('Failed to set AutoUpdater URL:', err);
-    }
-  }
-});
-
-// IPC handler to manually trigger update check from UI
-ipcMain.on('trigger-update-check', () => {
-  if (app.isPackaged) {
-    try {
       autoUpdater.checkForUpdates();
     } catch (err) {
       console.error('Manual update check failed:', err);
@@ -386,25 +366,28 @@ ipcMain.handle('save-csv-auto', async (event, data) => {
 
   // 1. Always save a local mirror backup in user data
   let localBackupPath = null;
+  let localBackupError = null;
   const localBackupDir = path.join(app.getPath('userData'), 'AutoExports');
   try {
     await fs.promises.mkdir(localBackupDir, { recursive: true });
-    localBackupPath = path.join(localBackupDir, fileName);
+    const backupPath = path.join(localBackupDir, fileName);
     const localTemp = path.join(localBackupDir, `${fileName}.${Date.now()}.tmp`);
     await fs.promises.writeFile(localTemp, csvContent, 'utf8');
     try {
-      await fs.promises.rename(localTemp, localBackupPath);
+      await fs.promises.rename(localTemp, backupPath);
     } catch {
-      await fs.promises.copyFile(localTemp, localBackupPath);
+      await fs.promises.copyFile(localTemp, backupPath);
       await fs.promises.unlink(localTemp).catch(() => {});
     }
+    localBackupPath = backupPath;
   } catch (localErr) {
     console.error('Failed to write local backup export:', localErr);
+    localBackupError = localErr.message;
   }
 
   // 2. If no target folder configured, report error
   if (!folderPath) {
-    return { success: false, error: 'Export folder path not specified.', localBackupPath };
+    return { success: false, error: 'Export folder path not specified.', localBackupPath, localBackupError };
   }
 
   // 3. Asynchronously write to target folder with atomic rename/replace
@@ -440,7 +423,8 @@ ipcMain.handle('save-csv-auto', async (event, data) => {
       success: false,
       networkError: true,
       error: err.message || 'Write failed',
-      localBackupPath
+      localBackupPath,
+      localBackupError
     };
   }
 });

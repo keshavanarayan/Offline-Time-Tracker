@@ -116,9 +116,14 @@ DEFAULT_EXPORT_FOLDER=\\YOUR_SERVER\path\TimeLog
    - The application reads the default export folder from `.env`.
    - To select a custom folder, click the **Auto-Export** button on the top bar.
    - Timesheets export automatically when you stop sessions, edit entries, or close the app.
+   - **Advanced Settings → Export CSV** writes the full timesheet to the configured export folder and keeps a local backup. If the network share is unavailable, the UI reports the failure and the backup location.
    - To reset back to the environment folder, open **Advanced Settings ▾** and click **Reset Export Folder to Server Default**.
 
-5. **End Your Workday:**
+5. **Configure Updates:**
+   - Click the update status in the header to choose the folder containing the `RELEASES` file and update packages.
+   - The selected update folder is saved and used for checks at startup and when **Check Updates** is selected.
+
+6. **End Your Workday:**
    - Click the close button (`X`) after your closing deadline.
    - Confirm the prompt to stop any active session, export today's CSV, and close the application.
    - Alternatively, use the **Shutdown** option in **Advanced Settings ▾** to save and exit immediately.
