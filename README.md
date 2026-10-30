@@ -179,3 +179,14 @@ Creates a new version tag and triggers the GitHub release build workflow.
 Copyright (c) 2026 Keshava Narayan / Spacio Techtonics.  
 - Free for Personal and Non-Commercial Use.  
 - Commercial distribution or sale requires explicit permission.
+
+
+## Changelog
+
+### v2.1.1 (2026-10-30)
+- feat: enhance CSV export functionality and update check process (74fbcb7)
+- feat: add renderer, state, main, and preload modules for the offline time tracker application (03bd588)
+- feat: initialize offline time tracker electron application structure and UI (d7ca6df)
+- feat: update timesheet export logic (8cd5a5c)
+- refactor: reorganize project structure by moving core files into a src directory (66ac2f3)
+- feat: add mandatory username validation, implement advanced log deletion management, and remove individual delete actions from the table (1646440)
